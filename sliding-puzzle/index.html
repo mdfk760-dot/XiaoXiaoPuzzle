@@ -1,0 +1,1817 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>滑動拼圖</title>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+
+      font-family:
+        "Microsoft JhengHei",
+        Arial,
+        sans-serif;
+
+      background:
+        linear-gradient(
+          135deg,
+          #0f172a,
+          #111827
+        );
+
+      color: white;
+    }
+
+
+    .container {
+      width: min(720px, 94%);
+      margin: auto;
+
+      padding: 30px 0 50px;
+    }
+
+
+    h1 {
+      margin: 0 0 10px;
+
+      text-align: center;
+
+      font-size: 32px;
+    }
+
+
+    .description {
+      margin-bottom: 25px;
+
+      text-align: center;
+
+      color: #94a3b8;
+
+      line-height: 1.7;
+    }
+
+
+    /* =========================
+       控制區
+    ========================= */
+
+    .toolbar {
+      display: flex;
+
+      justify-content: center;
+      align-items: center;
+
+      flex-wrap: wrap;
+
+      gap: 10px;
+
+      margin-bottom: 20px;
+    }
+
+
+    button,
+    select,
+    .upload-label {
+      border: none;
+
+      border-radius: 10px;
+
+      padding: 11px 16px;
+
+      font-size: 15px;
+
+      font-family: inherit;
+
+      cursor: pointer;
+    }
+
+
+    button,
+    .upload-label {
+      background: #334155;
+
+      color: white;
+
+      transition: 0.2s;
+    }
+
+
+    button:hover,
+    .upload-label:hover {
+      background: #475569;
+    }
+
+
+    button.primary {
+      background: #2563eb;
+    }
+
+
+    button.primary:hover {
+      background: #3b82f6;
+    }
+
+
+    select {
+      color: white;
+
+      background: #1e293b;
+
+      border: 1px solid #475569;
+    }
+
+
+    input[type="file"] {
+      display: none;
+    }
+
+
+    /* =========================
+       資訊
+    ========================= */
+
+    .info-bar {
+      display: flex;
+
+      justify-content: center;
+
+      flex-wrap: wrap;
+
+      gap: 10px;
+
+      margin-bottom: 20px;
+    }
+
+
+    .info-item {
+      padding: 10px 16px;
+
+      background: #1e293b;
+
+      border-radius: 10px;
+
+      color: #cbd5e1;
+    }
+
+
+    .info-value {
+      color: #facc15;
+
+      font-weight: bold;
+    }
+
+
+    /* =========================
+       拼圖
+    ========================= */
+
+    .board-container {
+      position: relative;
+
+      width: min(600px, 100%);
+
+      margin: auto;
+
+      padding: 10px;
+
+      border-radius: 18px;
+
+      background: #1e293b;
+
+      box-shadow:
+        0 15px 40px
+        rgba(0, 0, 0, 0.3);
+    }
+
+
+    #board {
+      display: grid;
+
+      width: 100%;
+
+      aspect-ratio: 1 / 1;
+
+      gap: 3px;
+
+      background: #0f172a;
+
+      border-radius: 12px;
+
+      overflow: hidden;
+    }
+
+
+    .tile {
+      position: relative;
+
+      display: flex;
+
+      align-items: center;
+      justify-content: center;
+
+      min-width: 0;
+
+      user-select: none;
+
+      cursor: pointer;
+
+      background-color: #334155;
+
+      color: white;
+
+      font-weight: bold;
+
+      font-size: clamp(
+        15px,
+        4vw,
+        30px
+      );
+
+      transition:
+        transform 0.12s,
+        filter 0.12s;
+    }
+
+
+    .tile:hover {
+      filter: brightness(1.15);
+    }
+
+
+    .tile:active {
+      transform: scale(0.96);
+    }
+
+
+    .tile.number-tile {
+      border:
+        1px solid
+        rgba(255,255,255,0.08);
+    }
+
+
+    .tile.image-tile {
+      background-repeat: no-repeat;
+    }
+
+
+    .tile.empty {
+      background: #0f172a;
+
+      cursor: default;
+    }
+
+
+    .tile.empty:hover {
+      filter: none;
+    }
+
+
+    /* =========================
+       拼圖完成
+    ========================= */
+
+    #completeOverlay {
+      position: absolute;
+
+      inset: 10px;
+
+      display: none;
+
+      align-items: center;
+      justify-content: center;
+
+      flex-direction: column;
+
+      padding: 20px;
+
+      text-align: center;
+
+      border-radius: 12px;
+
+      background:
+        rgba(15, 23, 42, 0.82);
+
+      backdrop-filter:
+        blur(5px);
+
+      z-index: 10;
+    }
+
+
+    #completeOverlay.show {
+      display: flex;
+    }
+
+
+    .complete-title {
+      margin-bottom: 8px;
+
+      font-size: 30px;
+
+      font-weight: bold;
+
+      color: #4ade80;
+    }
+
+
+    .complete-text {
+      color: #e2e8f0;
+
+      line-height: 1.8;
+    }
+
+
+    /* =========================
+       圖片預覽
+    ========================= */
+
+    .preview-section {
+      display: none;
+
+      margin-top: 25px;
+
+      padding: 18px;
+
+      background: #1e293b;
+
+      border-radius: 15px;
+
+      text-align: center;
+    }
+
+
+    .preview-section.show {
+      display: block;
+    }
+
+
+    .preview-title {
+      margin-bottom: 12px;
+
+      color: #cbd5e1;
+    }
+
+
+    #previewImage {
+      display: block;
+
+      width: min(280px, 100%);
+
+      aspect-ratio: 1 / 1;
+
+      margin: auto;
+
+      object-fit: cover;
+
+      border-radius: 10px;
+    }
+
+
+    /* =========================
+       提示
+    ========================= */
+
+    .help {
+      margin-top: 25px;
+
+      padding: 18px;
+
+      border-radius: 14px;
+
+      background: #1e293b;
+
+      color: #cbd5e1;
+
+      line-height: 1.8;
+    }
+
+
+    .help strong {
+      color: white;
+    }
+
+
+    /* =========================
+       手機版
+    ========================= */
+
+    @media (max-width: 600px) {
+
+      .container {
+        padding-top: 20px;
+      }
+
+
+      h1 {
+        font-size: 26px;
+      }
+
+
+      button,
+      select,
+      .upload-label {
+        padding: 10px 12px;
+
+        font-size: 14px;
+      }
+
+
+      .board-container {
+        padding: 6px;
+      }
+
+
+      #board {
+        gap: 2px;
+      }
+
+
+      #completeOverlay {
+        inset: 6px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+  <div class="container">
+
+    <h1>
+      滑動拼圖
+    </h1>
+
+
+    <div class="description">
+
+      將數字或圖片滑動到正確的位置。
+
+      <br>
+
+      只能移動空白格上下左右相鄰的拼圖。
+
+    </div>
+
+
+    <!-- =========================
+         控制區
+    ========================== -->
+
+    <div class="toolbar">
+
+      <select
+        id="sizeSelect"
+        onchange="changeSize()"
+      >
+
+        <option value="3">
+          3 × 3
+        </option>
+
+        <option value="4">
+          4 × 4
+        </option>
+
+        <option value="5">
+          5 × 5
+        </option>
+
+        <option
+          value="6"
+          selected
+        >
+          6 × 6
+        </option>
+
+      </select>
+
+
+      <button
+        id="numberModeButton"
+        onclick="useNumberMode()"
+      >
+        數字模式
+      </button>
+
+
+      <label
+        class="upload-label"
+        for="imageUpload"
+      >
+        上傳圖片
+      </label>
+
+
+      <input
+        id="imageUpload"
+        type="file"
+        accept="image/*"
+        onchange="handleImageUpload(event)"
+      >
+
+
+      <button
+        class="primary"
+        onclick="newGame()"
+      >
+        重新洗牌
+      </button>
+
+    </div>
+
+
+    <!-- =========================
+         資訊
+    ========================== -->
+
+    <div class="info-bar">
+
+      <div class="info-item">
+
+        模式：
+
+        <span
+          id="modeText"
+          class="info-value"
+        >
+          數字
+        </span>
+
+      </div>
+
+
+      <div class="info-item">
+
+        步數：
+
+        <span
+          id="moveCount"
+          class="info-value"
+        >
+          0
+        </span>
+
+      </div>
+
+
+      <div class="info-item">
+
+        時間：
+
+        <span
+          id="timer"
+          class="info-value"
+        >
+          00:00
+        </span>
+
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         拼圖
+    ========================== -->
+
+    <div class="board-container">
+
+      <div id="board"></div>
+
+
+      <div id="completeOverlay">
+
+        <div class="complete-title">
+          完成！
+        </div>
+
+        <div
+          id="completeText"
+          class="complete-text"
+        >
+        </div>
+
+        <button
+          class="primary"
+          onclick="newGame()"
+          style="margin-top:16px;"
+        >
+          再玩一局
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         原圖預覽
+    ========================== -->
+
+    <div
+      id="previewSection"
+      class="preview-section"
+    >
+
+      <div class="preview-title">
+        原圖參考
+      </div>
+
+      <img
+        id="previewImage"
+        alt="拼圖原圖"
+      >
+
+    </div>
+
+
+    <div class="help">
+
+      <strong>
+        遊戲規則：
+      </strong>
+
+      6 × 6 拼圖共有 35 個拼圖格與 1 個空白格。
+
+      點擊與空白格相鄰的拼圖，就可以將它滑入空白處。
+
+      <br>
+
+      上傳圖片後，系統會自動從圖片中央裁切為正方形，
+      再分割成對應數量的拼圖。
+
+    </div>
+
+  </div>
+
+
+  <script>
+
+    /* ==========================================
+       基本設定
+    ========================================== */
+
+    let size = 6;
+
+
+    /*
+      tiles 裡面存的是：
+
+      1, 2, 3 ... 35, 0
+
+      0 代表空白格
+    */
+
+    let tiles = [];
+
+
+    let moveCount = 0;
+
+
+    let gameStarted = false;
+
+    let gameCompleted = false;
+
+
+    let startTime = null;
+
+    let timerInterval = null;
+
+
+    /*
+      number = 數字模式
+      image  = 圖片模式
+    */
+
+    let gameMode = "number";
+
+
+    /*
+      裁切完成後的正方形圖片
+    */
+
+    let puzzleImage = null;
+
+
+
+    /* ==========================================
+       建立完成狀態
+    ========================================== */
+
+    function createSolvedTiles() {
+
+      const total =
+        size * size;
+
+
+      tiles = [];
+
+
+      for (
+        let i = 1;
+        i < total;
+        i++
+      ) {
+
+        tiles.push(i);
+
+      }
+
+
+      /*
+        最後一格是空白
+      */
+
+      tiles.push(0);
+
+    }
+
+
+
+    /* ==========================================
+       找空白格位置
+    ========================================== */
+
+    function getEmptyIndex() {
+
+      return tiles.indexOf(0);
+
+    }
+
+
+
+    /* ==========================================
+       取得可移動位置
+    ========================================== */
+
+    function getMovableIndexes() {
+
+      const emptyIndex =
+        getEmptyIndex();
+
+
+      const row =
+        Math.floor(
+          emptyIndex / size
+        );
+
+
+      const col =
+        emptyIndex % size;
+
+
+      const indexes = [];
+
+
+      /*
+        上
+      */
+
+      if (
+        row > 0
+      ) {
+
+        indexes.push(
+          emptyIndex - size
+        );
+
+      }
+
+
+      /*
+        下
+      */
+
+      if (
+        row < size - 1
+      ) {
+
+        indexes.push(
+          emptyIndex + size
+        );
+
+      }
+
+
+      /*
+        左
+      */
+
+      if (
+        col > 0
+      ) {
+
+        indexes.push(
+          emptyIndex - 1
+        );
+
+      }
+
+
+      /*
+        右
+      */
+
+      if (
+        col < size - 1
+      ) {
+
+        indexes.push(
+          emptyIndex + 1
+        );
+
+      }
+
+
+      return indexes;
+
+    }
+
+
+
+    /* ==========================================
+       洗牌
+
+       非常重要：
+
+       我們不是直接亂排陣列。
+
+       而是從完成狀態開始，
+       模擬玩家合法移動。
+
+       所以產生的拼圖一定有解。
+    ========================================== */
+
+    function shufflePuzzle() {
+
+      createSolvedTiles();
+
+
+      /*
+        拼圖越大，洗牌次數越多。
+      */
+
+      let shuffleMoves =
+        size * size * 30;
+
+
+      let lastEmptyIndex = -1;
+
+
+      for (
+        let i = 0;
+        i < shuffleMoves;
+        i++
+      ) {
+
+        const emptyIndex =
+          getEmptyIndex();
+
+
+        let movable =
+          getMovableIndexes();
+
+
+        /*
+          避免一直：
+
+          A → B → A → B
+
+          讓洗牌效果更好。
+        */
+
+        movable =
+          movable.filter(
+            index =>
+              index !== lastEmptyIndex
+          );
+
+
+        /*
+          如果過濾完沒東西，
+          就恢復原本清單。
+        */
+
+        if (
+          movable.length === 0
+        ) {
+
+          movable =
+            getMovableIndexes();
+
+        }
+
+
+        const randomIndex =
+          movable[
+            Math.floor(
+              Math.random() *
+              movable.length
+            )
+          ];
+
+
+        lastEmptyIndex =
+          emptyIndex;
+
+
+        swapTiles(
+          randomIndex,
+          emptyIndex
+        );
+
+      }
+
+
+      /*
+        極低機率洗完剛好完成，
+        再洗一次。
+      */
+
+      if (
+        isSolved()
+      ) {
+
+        shufflePuzzle();
+
+      }
+
+    }
+
+
+
+    /* ==========================================
+       交換拼圖
+    ========================================== */
+
+    function swapTiles(
+      indexA,
+      indexB
+    ) {
+
+      const temp =
+        tiles[indexA];
+
+
+      tiles[indexA] =
+        tiles[indexB];
+
+
+      tiles[indexB] =
+        temp;
+
+    }
+
+
+
+    /* ==========================================
+       畫拼圖
+    ========================================== */
+
+    function drawBoard() {
+
+      const board =
+        document.getElementById(
+          "board"
+        );
+
+
+      board.innerHTML = "";
+
+
+      board.style.gridTemplateColumns =
+        `repeat(${size}, 1fr)`;
+
+
+      board.style.gridTemplateRows =
+        `repeat(${size}, 1fr)`;
+
+
+      tiles.forEach(
+        (value, index) => {
+
+          const tile =
+            document.createElement(
+              "div"
+            );
+
+
+          /*
+            空白格
+          */
+
+          if (
+            value === 0
+          ) {
+
+            tile.className =
+              "tile empty";
+
+
+            board.appendChild(
+              tile
+            );
+
+
+            return;
+
+          }
+
+
+          /*
+            數字模式
+          */
+
+          if (
+            gameMode === "number"
+          ) {
+
+            tile.className =
+              "tile number-tile";
+
+
+            tile.textContent =
+              value;
+
+          }
+
+
+          /*
+            圖片模式
+          */
+
+          else {
+
+            tile.className =
+              "tile image-tile";
+
+
+            setTileImage(
+              tile,
+              value
+            );
+
+          }
+
+
+          tile.addEventListener(
+            "click",
+            function () {
+
+              moveTile(index);
+
+            }
+          );
+
+
+          board.appendChild(
+            tile
+          );
+
+        }
+      );
+
+    }
+
+
+
+    /* ==========================================
+       設定圖片拼圖的位置
+    ========================================== */
+
+    function setTileImage(
+      tile,
+      value
+    ) {
+
+      if (
+        !puzzleImage
+      ) {
+
+        return;
+
+      }
+
+
+      /*
+        value = 正確位置
+
+        例如 1 是左上角
+      */
+
+      const correctIndex =
+        value - 1;
+
+
+      const row =
+        Math.floor(
+          correctIndex / size
+        );
+
+
+      const col =
+        correctIndex % size;
+
+
+      tile.style.backgroundImage =
+        `url("${puzzleImage}")`;
+
+
+      /*
+        6 × 6：
+
+        每個拼圖背景都把圖片放大成
+        600% × 600%
+      */
+
+      tile.style.backgroundSize =
+        `${size * 100}% ${size * 100}%`;
+
+
+      /*
+        background-position
+        要換算成百分比。
+
+        CSS 的規則：
+
+        6 格時：
+
+        0%
+        20%
+        40%
+        60%
+        80%
+        100%
+      */
+
+      const x =
+        size === 1
+          ? 0
+          : (
+              col /
+              (size - 1)
+            ) * 100;
+
+
+      const y =
+        size === 1
+          ? 0
+          : (
+              row /
+              (size - 1)
+            ) * 100;
+
+
+      tile.style.backgroundPosition =
+        `${x}% ${y}%`;
+
+    }
+
+
+
+    /* ==========================================
+       玩家移動
+    ========================================== */
+
+    function moveTile(index) {
+
+      if (
+        gameCompleted
+      ) {
+
+        return;
+
+      }
+
+
+      const movable =
+        getMovableIndexes();
+
+
+      /*
+        如果不是空白格旁邊，
+        不能移動。
+      */
+
+      if (
+        !movable.includes(index)
+      ) {
+
+        return;
+
+      }
+
+
+      /*
+        第一次真的移動時開始計時。
+      */
+
+      if (
+        !gameStarted
+      ) {
+
+        startTimer();
+
+      }
+
+
+      const emptyIndex =
+        getEmptyIndex();
+
+
+      swapTiles(
+        index,
+        emptyIndex
+      );
+
+
+      moveCount++;
+
+
+      updateInfo();
+
+
+      drawBoard();
+
+
+      /*
+        檢查完成
+      */
+
+      if (
+        isSolved()
+      ) {
+
+        finishGame();
+
+      }
+
+    }
+
+
+
+    /* ==========================================
+       判斷是否完成
+    ========================================== */
+
+    function isSolved() {
+
+      const total =
+        size * size;
+
+
+      for (
+        let i = 0;
+        i < total - 1;
+        i++
+      ) {
+
+        if (
+          tiles[i] !== i + 1
+        ) {
+
+          return false;
+
+        }
+
+      }
+
+
+      return (
+        tiles[
+          total - 1
+        ] === 0
+      );
+
+    }
+
+
+
+    /* ==========================================
+       新遊戲
+    ========================================== */
+
+    function newGame() {
+
+      stopTimer();
+
+
+      moveCount = 0;
+
+      gameStarted = false;
+
+      gameCompleted = false;
+
+      startTime = null;
+
+
+      document
+        .getElementById(
+          "timer"
+        )
+        .textContent =
+        "00:00";
+
+
+      document
+        .getElementById(
+          "completeOverlay"
+        )
+        .classList.remove(
+          "show"
+        );
+
+
+      shufflePuzzle();
+
+
+      updateInfo();
+
+      drawBoard();
+
+    }
+
+
+
+    /* ==========================================
+       完成
+    ========================================== */
+
+    function finishGame() {
+
+      gameCompleted = true;
+
+
+      stopTimer();
+
+
+      /*
+        先把完成狀態畫出來。
+      */
+
+      drawBoard();
+
+
+      const timeText =
+        document
+          .getElementById(
+            "timer"
+          )
+          .textContent;
+
+
+      document
+        .getElementById(
+          "completeText"
+        )
+        .innerHTML =
+
+        `使用 <strong>${moveCount}</strong> 步完成<br>` +
+
+        `時間：<strong>${timeText}</strong>`;
+
+
+      /*
+        稍微延遲，
+        讓玩家先看到拼圖完成。
+      */
+
+      setTimeout(
+        function () {
+
+          document
+            .getElementById(
+              "completeOverlay"
+            )
+            .classList.add(
+              "show"
+            );
+
+        },
+        400
+      );
+
+    }
+
+
+
+    /* ==========================================
+       更新資訊
+    ========================================== */
+
+    function updateInfo() {
+
+      document
+        .getElementById(
+          "moveCount"
+        )
+        .textContent =
+        moveCount;
+
+
+      document
+        .getElementById(
+          "modeText"
+        )
+        .textContent =
+        gameMode === "number"
+          ? "數字"
+          : "圖片";
+
+    }
+
+
+
+    /* ==========================================
+       計時器
+    ========================================== */
+
+    function startTimer() {
+
+      gameStarted = true;
+
+
+      startTime =
+        Date.now();
+
+
+      timerInterval =
+        setInterval(
+          updateTimer,
+          1000
+        );
+
+
+      updateTimer();
+
+    }
+
+
+
+    function updateTimer() {
+
+      if (
+        !startTime
+      ) {
+
+        return;
+
+      }
+
+
+      const seconds =
+        Math.floor(
+          (
+            Date.now() -
+            startTime
+          ) / 1000
+        );
+
+
+      const minutes =
+        Math.floor(
+          seconds / 60
+        );
+
+
+      const remainingSeconds =
+        seconds % 60;
+
+
+      const text =
+        String(
+          minutes
+        ).padStart(
+          2,
+          "0"
+        )
+        +
+        ":"
+        +
+        String(
+          remainingSeconds
+        ).padStart(
+          2,
+          "0"
+        );
+
+
+      document
+        .getElementById(
+          "timer"
+        )
+        .textContent =
+        text;
+
+    }
+
+
+
+    function stopTimer() {
+
+      if (
+        timerInterval
+      ) {
+
+        clearInterval(
+          timerInterval
+        );
+
+
+        timerInterval =
+          null;
+
+      }
+
+    }
+
+
+
+    /* ==========================================
+       改變大小
+    ========================================== */
+
+    function changeSize() {
+
+      size =
+        Number(
+          document
+            .getElementById(
+              "sizeSelect"
+            )
+            .value
+        );
+
+
+      newGame();
+
+    }
+
+
+
+    /* ==========================================
+       數字模式
+    ========================================== */
+
+    function useNumberMode() {
+
+      gameMode =
+        "number";
+
+
+      document
+        .getElementById(
+          "previewSection"
+        )
+        .classList.remove(
+          "show"
+        );
+
+
+      newGame();
+
+    }
+
+
+
+    /* ==========================================
+       上傳圖片
+    ========================================== */
+
+    function handleImageUpload(
+      event
+    ) {
+
+      const file =
+        event.target.files[0];
+
+
+      if (
+        !file
+      ) {
+
+        return;
+
+      }
+
+
+      /*
+        限制必須是圖片
+      */
+
+      if (
+        !file.type.startsWith(
+          "image/"
+        )
+      ) {
+
+        alert(
+          "請選擇圖片檔案。"
+        );
+
+
+        return;
+
+      }
+
+
+      const reader =
+        new FileReader();
+
+
+      reader.onload =
+        function (
+          readerEvent
+        ) {
+
+          const image =
+            new Image();
+
+
+          image.onload =
+            function () {
+
+              cropImageToSquare(
+                image
+              );
+
+            };
+
+
+          image.src =
+            readerEvent
+              .target
+              .result;
+
+        };
+
+
+      reader.readAsDataURL(
+        file
+      );
+
+    }
+
+
+
+    /* ==========================================
+       自動把圖片中央裁成正方形
+
+       例如：
+
+       1920 × 1080
+
+       會從中央裁出：
+
+       1080 × 1080
+    ========================================== */
+
+    function cropImageToSquare(
+      image
+    ) {
+
+      const canvas =
+        document.createElement(
+          "canvas"
+        );
+
+
+      /*
+        輸出 1000 × 1000
+
+        解析度足夠，
+        又不會太大。
+      */
+
+      const outputSize =
+        1000;
+
+
+      canvas.width =
+        outputSize;
+
+
+      canvas.height =
+        outputSize;
+
+
+      const context =
+        canvas.getContext(
+          "2d"
+        );
+
+
+      const sourceSize =
+        Math.min(
+          image.width,
+          image.height
+        );
+
+
+      const sourceX =
+        (
+          image.width -
+          sourceSize
+        ) / 2;
+
+
+      const sourceY =
+        (
+          image.height -
+          sourceSize
+        ) / 2;
+
+
+      context.drawImage(
+
+        image,
+
+        sourceX,
+        sourceY,
+
+        sourceSize,
+        sourceSize,
+
+        0,
+        0,
+
+        outputSize,
+        outputSize
+
+      );
+
+
+      /*
+        轉成圖片資料
+      */
+
+      puzzleImage =
+        canvas.toDataURL(
+          "image/jpeg",
+          0.92
+        );
+
+
+      gameMode =
+        "image";
+
+
+      /*
+        顯示原圖
+      */
+
+      const previewImage =
+        document.getElementById(
+          "previewImage"
+        );
+
+
+      previewImage.src =
+        puzzleImage;
+
+
+      document
+        .getElementById(
+          "previewSection"
+        )
+        .classList.add(
+          "show"
+        );
+
+
+      newGame();
+
+    }
+
+
+
+    /* ==========================================
+       開始第一局
+    ========================================== */
+
+    newGame();
+
+  </script>
+
+</body>
+
+</html>
