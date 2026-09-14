@@ -37,6 +37,10 @@
     }
 
 
+    /* =========================
+       主容器
+    ========================= */
+
     .container {
       width: min(720px, 94%);
       margin: auto;
@@ -62,6 +66,42 @@
       color: #94a3b8;
 
       line-height: 1.7;
+    }
+
+
+    /* =========================
+       回到首頁
+    ========================= */
+
+    .home-button {
+      position: fixed;
+
+      top: 20px;
+      left: 20px;
+
+      z-index: 1000;
+
+      display: inline-block;
+
+      padding: 10px 16px;
+
+      border-radius: 10px;
+
+      background: #334155;
+      color: white;
+
+      text-decoration: none;
+
+      font-size: 15px;
+
+      transition: 0.2s;
+    }
+
+
+    .home-button:hover {
+      background: #475569;
+
+      transform: translateY(-1px);
     }
 
 
@@ -236,9 +276,9 @@
       font-weight: bold;
 
       font-size: clamp(
-        15px,
-        4vw,
-        30px
+        18px,
+        5vw,
+        34px
       );
 
       transition:
@@ -383,7 +423,7 @@
 
 
     /* =========================
-       提示
+       說明
     ========================= */
 
     .help {
@@ -404,36 +444,7 @@
     .help strong {
       color: white;
     }
-    
-    .home-button {
-      position: fixed;
-    
-      top: 20px;
-      left: 20px;
-    
-      z-index: 1000;
-    
-      display: inline-block;
-    
-      padding: 10px 16px;
-    
-      border-radius: 10px;
-    
-      background: #334155;
-      color: white;
-    
-      text-decoration: none;
-    
-      font-size: 15px;
-    
-      transition: 0.2s;
-    }
-    
-    .home-button:hover {
-      background: #475569;
-    
-      transform: translateY(-1px);
-    }
+
 
     /* =========================
        手機版
@@ -442,7 +453,7 @@
     @media (max-width: 600px) {
 
       .container {
-        padding-top: 20px;
+        padding-top: 70px;
       }
 
 
@@ -474,6 +485,16 @@
         inset: 6px;
       }
 
+
+      .home-button {
+        top: 12px;
+        left: 12px;
+
+        padding: 9px 13px;
+
+        font-size: 14px;
+      }
+
     }
 
   </style>
@@ -483,11 +504,12 @@
 
 <body>
 
+  <a class="home-button" href="../">
+    ← 回到首頁
+  </a>
+
+
   <div class="container">
-  
-    <a class="home-button" href="../">
-      ← 回到首頁
-    </a>
 
     <h1>
       滑動拼圖
@@ -516,7 +538,10 @@
         onchange="changeSize()"
       >
 
-        <option value="3">
+        <option
+          value="3"
+          selected
+        >
           3 × 3
         </option>
 
@@ -528,10 +553,7 @@
           5 × 5
         </option>
 
-        <option
-          value="6"
-          selected
-        >
+        <option value="6">
           6 × 6
         </option>
 
@@ -683,14 +705,16 @@
         遊戲規則：
       </strong>
 
-      6 × 6 拼圖共有 35 個拼圖格與 1 個空白格。
+      拼圖共有一個空白格。
 
-      點擊與空白格相鄰的拼圖，就可以將它滑入空白處。
+      點擊與空白格上下左右相鄰的拼圖，
+      就可以將它滑入空白處。
 
       <br>
 
-      上傳圖片後，系統會自動從圖片中央裁切為正方形，
-      再分割成對應數量的拼圖。
+      上傳圖片後，
+      系統會自動從圖片中央裁切為正方形，
+      再依照目前選擇的尺寸分割。
 
     </div>
 
@@ -705,14 +729,6 @@
 
     let size = 3;
 
-
-    /*
-      tiles 裡面存的是：
-
-      1, 2, 3 ... 35, 0
-
-      0 代表空白格
-    */
 
     let tiles = [];
 
@@ -730,17 +746,8 @@
     let timerInterval = null;
 
 
-    /*
-      number = 數字模式
-      image  = 圖片模式
-    */
-
     let gameMode = "number";
 
-
-    /*
-      裁切完成後的正方形圖片
-    */
 
     let puzzleImage = null;
 
@@ -769,10 +776,6 @@
 
       }
 
-
-      /*
-        最後一格是空白
-      */
 
       tiles.push(0);
 
@@ -815,10 +818,6 @@
       const indexes = [];
 
 
-      /*
-        上
-      */
-
       if (
         row > 0
       ) {
@@ -829,10 +828,6 @@
 
       }
 
-
-      /*
-        下
-      */
 
       if (
         row < size - 1
@@ -845,10 +840,6 @@
       }
 
 
-      /*
-        左
-      */
-
       if (
         col > 0
       ) {
@@ -859,10 +850,6 @@
 
       }
 
-
-      /*
-        右
-      */
 
       if (
         col < size - 1
@@ -883,15 +870,6 @@
 
     /* ==========================================
        洗牌
-
-       非常重要：
-
-       我們不是直接亂排陣列。
-
-       而是從完成狀態開始，
-       模擬玩家合法移動。
-
-       所以產生的拼圖一定有解。
     ========================================== */
 
     function shufflePuzzle() {
@@ -899,11 +877,7 @@
       createSolvedTiles();
 
 
-      /*
-        拼圖越大，洗牌次數越多。
-      */
-
-      let shuffleMoves =
+      const shuffleMoves =
         size * size * 30;
 
 
@@ -924,25 +898,12 @@
           getMovableIndexes();
 
 
-        /*
-          避免一直：
-
-          A → B → A → B
-
-          讓洗牌效果更好。
-        */
-
         movable =
           movable.filter(
             index =>
               index !== lastEmptyIndex
           );
 
-
-        /*
-          如果過濾完沒東西，
-          就恢復原本清單。
-        */
 
         if (
           movable.length === 0
@@ -974,11 +935,6 @@
 
       }
 
-
-      /*
-        極低機率洗完剛好完成，
-        再洗一次。
-      */
 
       if (
         isSolved()
@@ -1048,10 +1004,6 @@
             );
 
 
-          /*
-            空白格
-          */
-
           if (
             value === 0
           ) {
@@ -1070,10 +1022,6 @@
           }
 
 
-          /*
-            數字模式
-          */
-
           if (
             gameMode === "number"
           ) {
@@ -1087,10 +1035,6 @@
 
           }
 
-
-          /*
-            圖片模式
-          */
 
           else {
 
@@ -1128,7 +1072,7 @@
 
 
     /* ==========================================
-       設定圖片拼圖的位置
+       圖片格位置
     ========================================== */
 
     function setTileImage(
@@ -1144,12 +1088,6 @@
 
       }
 
-
-      /*
-        value = 正確位置
-
-        例如 1 是左上角
-      */
 
       const correctIndex =
         value - 1;
@@ -1169,32 +1107,9 @@
         `url("${puzzleImage}")`;
 
 
-      /*
-        6 × 6：
-
-        每個拼圖背景都把圖片放大成
-        600% × 600%
-      */
-
       tile.style.backgroundSize =
         `${size * 100}% ${size * 100}%`;
 
-
-      /*
-        background-position
-        要換算成百分比。
-
-        CSS 的規則：
-
-        6 格時：
-
-        0%
-        20%
-        40%
-        60%
-        80%
-        100%
-      */
 
       const x =
         size === 1
@@ -1240,11 +1155,6 @@
         getMovableIndexes();
 
 
-      /*
-        如果不是空白格旁邊，
-        不能移動。
-      */
-
       if (
         !movable.includes(index)
       ) {
@@ -1253,10 +1163,6 @@
 
       }
 
-
-      /*
-        第一次真的移動時開始計時。
-      */
 
       if (
         !gameStarted
@@ -1286,10 +1192,6 @@
       drawBoard();
 
 
-      /*
-        檢查完成
-      */
-
       if (
         isSolved()
       ) {
@@ -1303,7 +1205,7 @@
 
 
     /* ==========================================
-       判斷是否完成
+       判斷完成
     ========================================== */
 
     function isSolved() {
@@ -1397,10 +1299,6 @@
       stopTimer();
 
 
-      /*
-        先把完成狀態畫出來。
-      */
-
       drawBoard();
 
 
@@ -1422,11 +1320,6 @@
 
         `時間：<strong>${timeText}</strong>`;
 
-
-      /*
-        稍微延遲，
-        讓玩家先看到拼圖完成。
-      */
 
       setTimeout(
         function () {
@@ -1595,7 +1488,6 @@
         );
 
 
-      document.getElementById("sizeSelect").value = size;
       newGame();
 
     }
@@ -1647,10 +1539,6 @@
 
       }
 
-
-      /*
-        限制必須是圖片
-      */
 
       if (
         !file.type.startsWith(
@@ -1708,15 +1596,7 @@
 
 
     /* ==========================================
-       自動把圖片中央裁成正方形
-
-       例如：
-
-       1920 × 1080
-
-       會從中央裁出：
-
-       1080 × 1080
+       圖片裁切成正方形
     ========================================== */
 
     function cropImageToSquare(
@@ -1728,13 +1608,6 @@
           "canvas"
         );
 
-
-      /*
-        輸出 1000 × 1000
-
-        解析度足夠，
-        又不會太大。
-      */
 
       const outputSize =
         1000;
@@ -1794,10 +1667,6 @@
       );
 
 
-      /*
-        轉成圖片資料
-      */
-
       puzzleImage =
         canvas.toDataURL(
           "image/jpeg",
@@ -1808,10 +1677,6 @@
       gameMode =
         "image";
 
-
-      /*
-        顯示原圖
-      */
 
       const previewImage =
         document.getElementById(
@@ -1839,8 +1704,16 @@
 
 
     /* ==========================================
-       開始第一局
+       初始化
     ========================================== */
+
+    document
+      .getElementById(
+        "sizeSelect"
+      )
+      .value =
+      size;
+
 
     newGame();
 
