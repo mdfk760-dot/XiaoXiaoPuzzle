@@ -1141,69 +1141,146 @@
     ========================================== */
 
     function moveTile(index) {
-
-      if (
-        gameCompleted
-      ) {
-
+    
+      if (gameCompleted) {
         return;
-
       }
-
-
-      const movable =
-        getMovableIndexes();
-
-
-      if (
-        !movable.includes(index)
-      ) {
-
+    
+      const emptyIndex = getEmptyIndex();
+    
+      const clickedRow =
+        Math.floor(index / size);
+    
+      const clickedCol =
+        index % size;
+    
+      const emptyRow =
+        Math.floor(emptyIndex / size);
+    
+      const emptyCol =
+        emptyIndex % size;
+    
+    
+      // 必須與空白格在同一列或同一欄
+      const sameRow =
+        clickedRow === emptyRow;
+    
+      const sameCol =
+        clickedCol === emptyCol;
+    
+    
+      if (!sameRow && !sameCol) {
         return;
-
       }
-
-
-      if (
-        !gameStarted
-      ) {
-
+    
+    
+      if (!gameStarted) {
         startTimer();
-
       }
-
-
-      const emptyIndex =
-        getEmptyIndex();
-
-
-      swapTiles(
-        index,
-        emptyIndex
-      );
-
-
+    
+    
+      /* =========================
+         同一列
+      ========================= */
+    
+      if (sameRow) {
+    
+        // 點的位置在空白右邊
+        if (index > emptyIndex) {
+    
+          for (
+            let i = emptyIndex;
+            i < index;
+            i++
+          ) {
+    
+            tiles[i] =
+              tiles[i + 1];
+    
+          }
+    
+          tiles[index] = 0;
+    
+        }
+    
+        // 點的位置在空白左邊
+        else if (index < emptyIndex) {
+    
+          for (
+            let i = emptyIndex;
+            i > index;
+            i--
+          ) {
+    
+            tiles[i] =
+              tiles[i - 1];
+    
+          }
+    
+          tiles[index] = 0;
+    
+        }
+    
+      }
+    
+    
+      /* =========================
+         同一欄
+      ========================= */
+    
+      else if (sameCol) {
+    
+        // 點的位置在空白下面
+        if (index > emptyIndex) {
+    
+          for (
+            let i = emptyIndex;
+            i < index;
+            i += size
+          ) {
+    
+            tiles[i] =
+              tiles[i + size];
+    
+          }
+    
+          tiles[index] = 0;
+    
+        }
+    
+        // 點的位置在空白上面
+        else if (index < emptyIndex) {
+    
+          for (
+            let i = emptyIndex;
+            i > index;
+            i -= size
+          ) {
+    
+            tiles[i] =
+              tiles[i - size];
+    
+          }
+    
+          tiles[index] = 0;
+    
+        }
+    
+      }
+    
+    
       moveCount++;
-
-
+    
       updateInfo();
-
-
+    
       drawBoard();
-
-
-      if (
-        isSolved()
-      ) {
-
+    
+    
+      if (isSolved()) {
         finishGame();
-
       }
-
+    
     }
-
-
-
     /* ==========================================
        判斷完成
     ========================================== */
