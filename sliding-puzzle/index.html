@@ -17,6 +17,7 @@
       box-sizing: border-box;
     }
 
+
     body {
       margin: 0;
       min-height: 100vh;
@@ -181,15 +182,14 @@
 
 
     /* =========================
-       資訊
+       資訊列
     ========================= */
 
     .info-bar {
-      display: flex;
+      display: grid;
 
-      justify-content: center;
-
-      flex-wrap: wrap;
+      grid-template-columns:
+        repeat(3, minmax(0, 1fr));
 
       gap: 10px;
 
@@ -198,13 +198,17 @@
 
 
     .info-item {
-      padding: 10px 16px;
+      padding: 10px 8px;
 
       background: #1e293b;
 
       border-radius: 10px;
 
       color: #cbd5e1;
+
+      text-align: center;
+
+      white-space: nowrap;
     }
 
 
@@ -453,6 +457,8 @@
     @media (max-width: 600px) {
 
       .container {
+        width: 96%;
+
         padding-top: 70px;
       }
 
@@ -462,12 +468,36 @@
       }
 
 
+      .toolbar {
+        gap: 7px;
+      }
+
+
       button,
       select,
       .upload-label {
-        padding: 10px 12px;
+        padding: 10px 11px;
 
         font-size: 14px;
+      }
+
+
+      .info-bar {
+        gap: 6px;
+      }
+
+
+      .info-item {
+        padding: 9px 4px;
+
+        font-size: 13px;
+
+        white-space: nowrap;
+      }
+
+
+      .info-value {
+        font-size: 15px;
       }
 
 
@@ -504,12 +534,17 @@
 
 <body>
 
-  <a class="home-button" href="../">
+
+  <a
+    class="home-button"
+    href="../"
+  >
     ← 回到首頁
   </a>
 
 
   <div class="container">
+
 
     <h1>
       滑動拼圖
@@ -522,7 +557,8 @@
 
       <br>
 
-      只能移動空白格上下左右相鄰的拼圖。
+      點擊與空白格位於同一列或同一欄的拼圖，
+      中間的拼圖會一起向空白格方向滑動。
 
     </div>
 
@@ -532,6 +568,7 @@
     ========================== -->
 
     <div class="toolbar">
+
 
       <select
         id="sizeSelect"
@@ -561,7 +598,6 @@
 
 
       <button
-        id="numberModeButton"
         onclick="useNumberMode()"
       >
         數字模式
@@ -591,14 +627,16 @@
         重新洗牌
       </button>
 
+
     </div>
 
 
     <!-- =========================
-         資訊
+         資訊列
     ========================== -->
 
     <div class="info-bar">
+
 
       <div class="info-item">
 
@@ -641,6 +679,7 @@
 
       </div>
 
+
     </div>
 
 
@@ -649,6 +688,7 @@
     ========================== -->
 
     <div class="board-container">
+
 
       <div id="board"></div>
 
@@ -659,11 +699,13 @@
           完成！
         </div>
 
+
         <div
           id="completeText"
           class="complete-text"
         >
         </div>
+
 
         <button
           class="primary"
@@ -674,6 +716,7 @@
         </button>
 
       </div>
+
 
     </div>
 
@@ -691,6 +734,7 @@
         原圖參考
       </div>
 
+
       <img
         id="previewImage"
         alt="拼圖原圖"
@@ -707,8 +751,8 @@
 
       拼圖共有一個空白格。
 
-      點擊與空白格上下左右相鄰的拼圖，
-      就可以將它滑入空白處。
+      如果點擊的拼圖與空白格位於同一列或同一欄，
+      中間所有拼圖都會一起向空白格方向移動。
 
       <br>
 
@@ -718,14 +762,17 @@
 
     </div>
 
+
   </div>
 
 
   <script>
 
+
     /* ==========================================
        基本設定
     ========================================== */
+
 
     let size = 3;
 
@@ -738,10 +785,12 @@
 
     let gameStarted = false;
 
+
     let gameCompleted = false;
 
 
     let startTime = null;
+
 
     let timerInterval = null;
 
@@ -757,7 +806,9 @@
        建立完成狀態
     ========================================== */
 
+
     function createSolvedTiles() {
+
 
       const total =
         size * size;
@@ -784,8 +835,9 @@
 
 
     /* ==========================================
-       找空白格位置
+       找空白格
     ========================================== */
+
 
     function getEmptyIndex() {
 
@@ -796,10 +848,14 @@
 
 
     /* ==========================================
-       取得可移動位置
+       取得空白格相鄰格
+
+       洗牌時使用
     ========================================== */
 
+
     function getMovableIndexes() {
+
 
       const emptyIndex =
         getEmptyIndex();
@@ -818,9 +874,7 @@
       const indexes = [];
 
 
-      if (
-        row > 0
-      ) {
+      if (row > 0) {
 
         indexes.push(
           emptyIndex - size
@@ -840,9 +894,7 @@
       }
 
 
-      if (
-        col > 0
-      ) {
+      if (col > 0) {
 
         indexes.push(
           emptyIndex - 1
@@ -870,15 +922,20 @@
 
     /* ==========================================
        洗牌
+
+       從完成狀態進行合法移動，
+       因此一定有解。
     ========================================== */
 
+
     function shufflePuzzle() {
+
 
       createSolvedTiles();
 
 
       const shuffleMoves =
-        size * size * 30;
+        size * size * 35;
 
 
       let lastEmptyIndex = -1;
@@ -889,6 +946,7 @@
         i < shuffleMoves;
         i++
       ) {
+
 
         const emptyIndex =
           getEmptyIndex();
@@ -949,13 +1007,15 @@
 
 
     /* ==========================================
-       交換拼圖
+       交換兩格
     ========================================== */
+
 
     function swapTiles(
       indexA,
       indexB
     ) {
+
 
       const temp =
         tiles[indexA];
@@ -976,7 +1036,9 @@
        畫拼圖
     ========================================== */
 
+
     function drawBoard() {
+
 
       const board =
         document.getElementById(
@@ -998,15 +1060,19 @@
       tiles.forEach(
         (value, index) => {
 
+
           const tile =
             document.createElement(
               "div"
             );
 
 
+          /* 空白 */
+
           if (
             value === 0
           ) {
+
 
             tile.className =
               "tile empty";
@@ -1022,9 +1088,12 @@
           }
 
 
+          /* 數字模式 */
+
           if (
             gameMode === "number"
           ) {
+
 
             tile.className =
               "tile number-tile";
@@ -1036,7 +1105,10 @@
           }
 
 
+          /* 圖片模式 */
+
           else {
+
 
             tile.className =
               "tile image-tile";
@@ -1053,6 +1125,7 @@
           tile.addEventListener(
             "click",
             function () {
+
 
               moveTile(index);
 
@@ -1072,13 +1145,15 @@
 
 
     /* ==========================================
-       圖片格位置
+       設定圖片拼圖
     ========================================== */
+
 
     function setTileImage(
       tile,
       value
     ) {
+
 
       if (
         !puzzleImage
@@ -1112,21 +1187,17 @@
 
 
       const x =
-        size === 1
-          ? 0
-          : (
-              col /
-              (size - 1)
-            ) * 100;
+        (
+          col /
+          (size - 1)
+        ) * 100;
 
 
       const y =
-        size === 1
-          ? 0
-          : (
-              row /
-              (size - 1)
-            ) * 100;
+        (
+          row /
+          (size - 1)
+        ) * 100;
 
 
       tile.style.backgroundPosition =
@@ -1138,154 +1209,267 @@
 
     /* ==========================================
        玩家移動
+
+       支援：
+       同一列整排滑動
+       同一欄整排滑動
     ========================================== */
 
+
     function moveTile(index) {
-    
-      if (gameCompleted) {
+
+
+      if (
+        gameCompleted
+      ) {
+
         return;
+
       }
-    
-      const emptyIndex = getEmptyIndex();
-    
+
+
+      const emptyIndex =
+        getEmptyIndex();
+
+
       const clickedRow =
-        Math.floor(index / size);
-    
+        Math.floor(
+          index / size
+        );
+
+
       const clickedCol =
         index % size;
-    
+
+
       const emptyRow =
-        Math.floor(emptyIndex / size);
-    
+        Math.floor(
+          emptyIndex / size
+        );
+
+
       const emptyCol =
         emptyIndex % size;
-    
-    
-      // 必須與空白格在同一列或同一欄
+
+
       const sameRow =
         clickedRow === emptyRow;
-    
+
+
       const sameCol =
         clickedCol === emptyCol;
-    
-    
-      if (!sameRow && !sameCol) {
+
+
+      /*
+        不在同一列也不在同一欄
+        → 不能移動
+      */
+
+      if (
+        !sameRow &&
+        !sameCol
+      ) {
+
         return;
+
       }
-    
-    
-      if (!gameStarted) {
+
+
+      /*
+        第一次有效移動才開始計時
+      */
+
+      if (
+        !gameStarted
+      ) {
+
         startTimer();
+
       }
-    
-    
+
+
       /* =========================
          同一列
       ========================= */
-    
+
+
       if (sameRow) {
-    
-        // 點的位置在空白右邊
-        if (index > emptyIndex) {
-    
+
+
+        /*
+          點擊位置在空白右側
+
+          □ 2 3
+
+          點 3
+
+          2 3 □
+        */
+
+        if (
+          index > emptyIndex
+        ) {
+
+
           for (
             let i = emptyIndex;
             i < index;
             i++
           ) {
-    
+
+
             tiles[i] =
               tiles[i + 1];
-    
+
           }
-    
+
+
           tiles[index] = 0;
-    
+
         }
-    
-        // 點的位置在空白左邊
-        else if (index < emptyIndex) {
-    
+
+
+        /*
+          點擊位置在空白左側
+
+          1 2 □
+
+          點 1
+
+          □ 1 2
+        */
+
+        else if (
+          index < emptyIndex
+        ) {
+
+
           for (
             let i = emptyIndex;
             i > index;
             i--
           ) {
-    
+
+
             tiles[i] =
               tiles[i - 1];
-    
+
           }
-    
+
+
           tiles[index] = 0;
-    
+
         }
-    
+
       }
-    
-    
+
+
       /* =========================
          同一欄
       ========================= */
-    
+
+
       else if (sameCol) {
-    
-        // 點的位置在空白下面
-        if (index > emptyIndex) {
-    
+
+
+        /*
+          點擊位置在空白下面
+
+          □
+          4
+          7
+
+          點 7
+
+          4
+          7
+          □
+        */
+
+        if (
+          index > emptyIndex
+        ) {
+
+
           for (
             let i = emptyIndex;
             i < index;
             i += size
           ) {
-    
+
+
             tiles[i] =
               tiles[i + size];
-    
+
           }
-    
+
+
           tiles[index] = 0;
-    
+
         }
-    
-        // 點的位置在空白上面
-        else if (index < emptyIndex) {
-    
+
+
+        /*
+          點擊位置在空白上面
+        */
+
+        else if (
+          index < emptyIndex
+        ) {
+
+
           for (
             let i = emptyIndex;
             i > index;
             i -= size
           ) {
-    
+
+
             tiles[i] =
               tiles[i - size];
-    
+
           }
-    
+
+
           tiles[index] = 0;
-    
+
         }
-    
+
       }
-    
-    
+
+
+      /*
+        整排移動算 1 步
+      */
+
       moveCount++;
-    
+
+
       updateInfo();
-    
+
+
       drawBoard();
-    
-    
-      if (isSolved()) {
+
+
+      if (
+        isSolved()
+      ) {
+
         finishGame();
+
       }
-    
+
     }
+
+
+
     /* ==========================================
        判斷完成
     ========================================== */
 
+
     function isSolved() {
+
 
       const total =
         size * size;
@@ -1296,6 +1480,7 @@
         i < total - 1;
         i++
       ) {
+
 
         if (
           tiles[i] !== i + 1
@@ -1322,16 +1507,21 @@
        新遊戲
     ========================================== */
 
+
     function newGame() {
+
 
       stopTimer();
 
 
       moveCount = 0;
 
+
       gameStarted = false;
 
+
       gameCompleted = false;
+
 
       startTime = null;
 
@@ -1358,6 +1548,7 @@
 
       updateInfo();
 
+
       drawBoard();
 
     }
@@ -1365,10 +1556,12 @@
 
 
     /* ==========================================
-       完成
+       完成遊戲
     ========================================== */
 
+
     function finishGame() {
+
 
       gameCompleted = true;
 
@@ -1401,6 +1594,7 @@
       setTimeout(
         function () {
 
+
           document
             .getElementById(
               "completeOverlay"
@@ -1421,7 +1615,9 @@
        更新資訊
     ========================================== */
 
+
     function updateInfo() {
+
 
       document
         .getElementById(
@@ -1436,8 +1632,11 @@
           "modeText"
         )
         .textContent =
+
         gameMode === "number"
+
           ? "數字"
+
           : "圖片";
 
     }
@@ -1448,7 +1647,9 @@
        計時器
     ========================================== */
 
+
     function startTimer() {
+
 
       gameStarted = true;
 
@@ -1471,6 +1672,7 @@
 
 
     function updateTimer() {
+
 
       if (
         !startTime
@@ -1501,15 +1703,20 @@
 
 
       const text =
+
         String(
           minutes
         ).padStart(
           2,
           "0"
         )
+
         +
+
         ":"
+
         +
+
         String(
           remainingSeconds
         ).padStart(
@@ -1531,17 +1738,18 @@
 
     function stopTimer() {
 
+
       if (
         timerInterval
       ) {
+
 
         clearInterval(
           timerInterval
         );
 
 
-        timerInterval =
-          null;
+        timerInterval = null;
 
       }
 
@@ -1550,10 +1758,12 @@
 
 
     /* ==========================================
-       改變大小
+       改變尺寸
     ========================================== */
 
+
     function changeSize() {
+
 
       size =
         Number(
@@ -1575,7 +1785,9 @@
        數字模式
     ========================================== */
 
+
     function useNumberMode() {
+
 
       gameMode =
         "number";
@@ -1600,9 +1812,11 @@
        上傳圖片
     ========================================== */
 
+
     function handleImageUpload(
       event
     ) {
+
 
       const file =
         event.target.files[0];
@@ -1623,6 +1837,7 @@
         )
       ) {
 
+
         alert(
           "請選擇圖片檔案。"
         );
@@ -1642,12 +1857,14 @@
           readerEvent
         ) {
 
+
           const image =
             new Image();
 
 
           image.onload =
             function () {
+
 
               cropImageToSquare(
                 image
@@ -1673,12 +1890,14 @@
 
 
     /* ==========================================
-       圖片裁切成正方形
+       裁切圖片
     ========================================== */
+
 
     function cropImageToSquare(
       image
     ) {
+
 
       const canvas =
         document.createElement(
@@ -1784,6 +2003,7 @@
        初始化
     ========================================== */
 
+
     document
       .getElementById(
         "sizeSelect"
@@ -1793,6 +2013,7 @@
 
 
     newGame();
+
 
   </script>
 
