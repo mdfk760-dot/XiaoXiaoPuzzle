@@ -17,6 +17,7 @@
       box-sizing: border-box;
     }
 
+
     body {
       margin: 0;
       min-height: 100vh;
@@ -64,7 +65,42 @@
 
 
     /* =========================
-       上方控制區
+       回到首頁
+    ========================= */
+
+    .home-button {
+      position: fixed;
+
+      top: 20px;
+      left: 20px;
+
+      z-index: 1000;
+
+      display: inline-block;
+
+      padding: 10px 16px;
+
+      border-radius: 10px;
+
+      background: #334155;
+      color: white;
+
+      text-decoration: none;
+
+      font-size: 15px;
+
+      transition: 0.2s;
+    }
+
+
+    .home-button:hover {
+      background: #475569;
+      transform: translateY(-1px);
+    }
+
+
+    /* =========================
+       控制區
     ========================= */
 
     .toolbar {
@@ -140,24 +176,29 @@
     ========================= */
 
     .info-bar {
-      display: flex;
-      justify-content: center;
+      display: grid;
 
-      gap: 30px;
-      flex-wrap: wrap;
+      grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+      gap: 10px;
 
       margin-bottom: 22px;
-
-      color: #cbd5e1;
     }
 
 
     .info-item {
       background: #1e293b;
 
-      padding: 10px 16px;
+      padding: 10px 8px;
 
       border-radius: 10px;
+
+      text-align: center;
+
+      color: #cbd5e1;
+
+      white-space: nowrap;
     }
 
 
@@ -195,7 +236,10 @@
 
     .panel h2 {
       margin-top: 0;
+      margin-bottom: 14px;
+
       text-align: center;
+
       font-size: 20px;
     }
 
@@ -346,81 +390,122 @@
 
 
     /* =========================
-       回到首頁
-    ========================= */
-
-    .home-button {
-      position: fixed;
-
-      top: 20px;
-      left: 20px;
-
-      z-index: 1000;
-
-      display: inline-block;
-
-      padding: 10px 16px;
-
-      border-radius: 10px;
-
-      background: #334155;
-      color: white;
-
-      text-decoration: none;
-
-      font-size: 15px;
-
-      transition: 0.2s;
-    }
-
-
-    .home-button:hover {
-      background: #475569;
-      transform: translateY(-1px);
-    }
-
-
-    /* =========================
        手機版
     ========================= */
 
     @media (max-width: 700px) {
 
       .container {
-        width: 95%;
-        padding-top: 70px;
+        width: 96%;
+
+        padding-top: 74px;
       }
 
 
       h1 {
-        font-size: 25px;
+        font-size: 24px;
+
+        margin-bottom: 8px;
       }
 
 
-      .game-area {
-        grid-template-columns: 1fr;
+      .description {
+        font-size: 14px;
+
+        margin-bottom: 16px;
+
+        line-height: 1.5;
       }
 
 
       .toolbar {
-        gap: 8px;
+        gap: 6px;
+
+        margin-bottom: 14px;
       }
 
 
       select,
       button {
-        font-size: 14px;
-        padding: 10px 12px;
+        font-size: 13px;
+
+        padding: 9px 10px;
       }
 
 
       .info-bar {
-        gap: 8px;
+        gap: 6px;
+
+        margin-bottom: 14px;
       }
 
 
       .info-item {
+        font-size: 12px;
+
+        padding: 8px 4px;
+      }
+
+
+      .info-value {
         font-size: 14px;
+      }
+
+
+      .game-area {
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 14px;
+      }
+
+
+      .panel {
+        padding: 12px;
+
+        border-radius: 14px;
+      }
+
+
+      .panel h2 {
+        font-size: 18px;
+
+        margin-bottom: 10px;
+      }
+
+
+      /* =========================
+         手機版目標圖案縮小
+      ========================= */
+
+      .panel:first-child {
+        padding-bottom: 14px;
+      }
+
+
+      .panel:first-child .board-wrapper {
+        width: 170px;
+        height: 170px;
+
+        margin: 0 auto;
+
+        aspect-ratio: auto;
+      }
+
+
+      /* =========================
+         手機版目前圖案放大
+      ========================= */
+
+      .panel:last-child .board-wrapper {
+        width: 100%;
+
+        max-width: 430px;
+
+        margin: 0 auto;
+
+        aspect-ratio: 1 / 1;
       }
 
 
@@ -428,9 +513,27 @@
         top: 12px;
         left: 12px;
 
-        padding: 9px 13px;
+        padding: 8px 12px;
 
         font-size: 14px;
+      }
+
+
+      #message {
+        font-size: 17px;
+
+        margin-top: 16px;
+
+        min-height: 28px;
+      }
+
+
+      .rules {
+        font-size: 13px;
+
+        padding: 14px;
+
+        margin-top: 16px;
       }
 
     }
@@ -442,12 +545,17 @@
 
 <body>
 
-  <a class="home-button" href="../">
+
+  <a
+    class="home-button"
+    href="../"
+  >
     ← 回到首頁
   </a>
 
 
   <div class="container">
+
 
     <h1>
       連線燈光
@@ -466,7 +574,7 @@
 
       <br>
 
-      請把右邊變成左邊的目標圖案。
+      請把目前圖案變成指定目標。
 
     </div>
 
@@ -476,6 +584,7 @@
     ========================== -->
 
     <div class="toolbar">
+
 
       <select
         id="difficulty"
@@ -489,9 +598,11 @@
           簡單
         </option>
 
+
         <option value="normal">
           普通
         </option>
+
 
         <option value="hard">
           困難
@@ -500,7 +611,9 @@
       </select>
 
 
-      <button onclick="restartGame()">
+      <button
+        onclick="restartGame()"
+      >
         重新開始
       </button>
 
@@ -520,6 +633,7 @@
         下一關
       </button>
 
+
     </div>
 
 
@@ -528,6 +642,7 @@
     ========================== -->
 
     <div class="info-bar">
+
 
       <div class="info-item">
 
@@ -570,23 +685,25 @@
 
       </div>
 
+
     </div>
 
 
     <!-- =========================
-         遊戲板
+         遊戲區
     ========================== -->
 
     <div class="game-area">
 
 
-      <!-- 目標 -->
+      <!-- 目標圖案 -->
 
       <div class="panel">
 
         <h2>
           目標圖案
         </h2>
+
 
         <div class="board-wrapper">
 
@@ -601,13 +718,14 @@
       </div>
 
 
-      <!-- 玩家 -->
+      <!-- 目前圖案 -->
 
       <div class="panel">
 
         <h2>
           目前圖案
         </h2>
+
 
         <div class="board-wrapper">
 
@@ -634,7 +752,12 @@
         規則：
       </strong>
 
-      每個點只能看成「按」或「不按」。
+      每個點都可以按下。
+
+      按下一個點時，
+      該點與所有直接連線的節點都會切換亮／暗。
+
+      <br>
 
       同一個點按兩次，
       效果會互相抵消。
@@ -967,52 +1090,71 @@
     ================================================== */
 
 
-    function applyPress(state, index) {
+    function applyPress(
+      state,
+      index
+    ) {
 
 
       state[index] =
         !state[index];
 
 
-      connections.forEach(connection => {
+      connections.forEach(
+        connection => {
 
 
-        const a = connection[0];
+          const a =
+            connection[0];
 
-        const b = connection[1];
+
+          const b =
+            connection[1];
 
 
-        if (a === index) {
+          if (
+            a === index
+          ) {
 
-          state[b] =
-            !state[b];
+
+            state[b] =
+              !state[b];
+
+          }
+
+
+          else if (
+            b === index
+          ) {
+
+
+            state[a] =
+              !state[a];
+
+          }
 
         }
-
-
-        else if (b === index) {
-
-          state[a] =
-            !state[a];
-
-        }
-
-
-      });
+      );
 
     }
 
 
 
     /* ==================================================
-       比較兩個狀態
+       比較狀態
     ================================================== */
 
 
-    function statesEqual(a, b) {
+    function statesEqual(
+      a,
+      b
+    ) {
 
 
-      if (a.length !== b.length) {
+      if (
+        a.length !==
+        b.length
+      ) {
 
         return false;
 
@@ -1026,7 +1168,9 @@
       ) {
 
 
-        if (a[i] !== b[i]) {
+        if (
+          a[i] !== b[i]
+        ) {
 
           return false;
 
@@ -1052,11 +1196,15 @@
     ) {
 
 
-      const n = nodes.length;
+      const n =
+        nodes.length;
 
 
       const total =
-        Math.pow(2, n);
+        Math.pow(
+          2,
+          n
+        );
 
 
       let best = null;
@@ -1117,7 +1265,8 @@
           ) {
 
 
-            best = presses;
+            best =
+              presses;
 
           }
 
@@ -1152,6 +1301,7 @@
         difficulty === "easy"
       ) {
 
+
         return {
           min: 1,
           max: 2
@@ -1163,6 +1313,7 @@
       if (
         difficulty === "normal"
       ) {
+
 
         return {
           min: 3,
@@ -1182,7 +1333,7 @@
 
 
     /* ==================================================
-       選擇版型
+       選版型
     ================================================== */
 
 
@@ -1248,7 +1399,9 @@
 
       nodes =
         layout.nodes.map(
-          node => ({ ...node })
+          node => ({
+            ...node
+          })
         );
 
 
@@ -1437,7 +1590,9 @@
 
       moveCount = 0;
 
+
       hintIndex = null;
+
 
       gameFinished = false;
 
@@ -1450,7 +1605,9 @@
     ================================================== */
 
 
-    function drawConnections(svg) {
+    function drawConnections(
+      svg
+    ) {
 
 
       connections.forEach(
@@ -1506,7 +1663,9 @@
           );
 
 
-          svg.appendChild(line);
+          svg.appendChild(
+            line
+          );
 
         }
       );
@@ -1524,15 +1683,18 @@
 
 
       const svg =
-        document.getElementById(
-          "targetBoard"
-        );
+        document
+          .getElementById(
+            "targetBoard"
+          );
 
 
       svg.innerHTML = "";
 
 
-      drawConnections(svg);
+      drawConnections(
+        svg
+      );
 
 
       nodes.forEach(
@@ -1577,7 +1739,9 @@
           );
 
 
-          svg.appendChild(circle);
+          svg.appendChild(
+            circle
+          );
 
         }
       );
@@ -1595,15 +1759,18 @@
 
 
       const svg =
-        document.getElementById(
-          "gameBoard"
-        );
+        document
+          .getElementById(
+            "gameBoard"
+          );
 
 
       svg.innerHTML = "";
 
 
-      drawConnections(svg);
+      drawConnections(
+        svg
+      );
 
 
       nodes.forEach(
@@ -1636,6 +1803,7 @@
 
 
           let className =
+
             currentState[index]
 
               ? "node on"
@@ -1665,13 +1833,17 @@
             function () {
 
 
-              clickNode(index);
+              clickNode(
+                index
+              );
 
             }
           );
 
 
-          svg.appendChild(circle);
+          svg.appendChild(
+            circle
+          );
 
         }
       );
@@ -1685,7 +1857,9 @@
     ================================================== */
 
 
-    function clickNode(index) {
+    function clickNode(
+      index
+    ) {
 
 
       if (
@@ -1757,7 +1931,7 @@
 
 
     /* ==================================================
-       檢查過關
+       檢查完成
     ================================================== */
 
 
@@ -1780,9 +1954,10 @@
 
 
       const message =
-        document.getElementById(
-          "message"
-        );
+        document
+          .getElementById(
+            "message"
+          );
 
 
       if (
@@ -1834,7 +2009,8 @@
         .getElementById(
           "message"
         )
-        .textContent = "";
+        .textContent =
+        "";
 
 
       drawGame();
@@ -1847,7 +2023,7 @@
 
 
     /* ==================================================
-       新關卡
+       下一關
     ================================================== */
 
 
@@ -1864,7 +2040,8 @@
         .getElementById(
           "message"
         )
-        .textContent = "";
+        .textContent =
+        "";
 
 
       drawTarget();
@@ -1956,6 +2133,14 @@
     /* ==================================================
        初始化
     ================================================== */
+
+
+    document
+      .getElementById(
+        "difficulty"
+      )
+      .value =
+      "easy";
 
 
     newGame();
