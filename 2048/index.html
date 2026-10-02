@@ -195,14 +195,60 @@
       font-size: clamp(18px, 6vw, 34px);
     }
 
-    .cell.pop {
-      animation: pop 0.16s ease;
+    /* 移動動畫：讓方塊有真正滑向目的地的感覺 */
+    .cell.slide-left  { animation: slide-left  0.15s ease-out; }
+    .cell.slide-right { animation: slide-right 0.15s ease-out; }
+    .cell.slide-up    { animation: slide-up    0.15s ease-out; }
+    .cell.slide-down  { animation: slide-down  0.15s ease-out; }
+
+    /* 合併後再稍微彈一下 */
+    .cell.pop.slide-left  { animation: slide-left  0.15s ease-out, pop 0.17s ease 0.13s; }
+    .cell.pop.slide-right { animation: slide-right 0.15s ease-out, pop 0.17s ease 0.13s; }
+    .cell.pop.slide-up    { animation: slide-up    0.15s ease-out, pop 0.17s ease 0.13s; }
+    .cell.pop.slide-down  { animation: slide-down  0.15s ease-out, pop 0.17s ease 0.13s; }
+
+    /* 新產生的 2 / 4 */
+    .cell.new-tile {
+      animation: appear 0.18s ease-out 0.10s both;
+    }
+
+    @keyframes slide-left {
+      from { transform: translateX(22px); }
+      to   { transform: translateX(0); }
+    }
+
+    @keyframes slide-right {
+      from { transform: translateX(-22px); }
+      to   { transform: translateX(0); }
+    }
+
+    @keyframes slide-up {
+      from { transform: translateY(22px); }
+      to   { transform: translateY(0); }
+    }
+
+    @keyframes slide-down {
+      from { transform: translateY(-22px); }
+      to   { transform: translateY(0); }
     }
 
     @keyframes pop {
-      0%   { transform: scale(0.82); }
-      65%  { transform: scale(1.08); }
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.11); }
       100% { transform: scale(1); }
+    }
+
+    @keyframes appear {
+      0%   { transform: scale(0.35); opacity: 0; }
+      70%  { transform: scale(1.08); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cell {
+        animation: none !important;
+        transition: none !important;
+      }
     }
 
     .overlay {
@@ -429,6 +475,8 @@
     let keepPlaying = false;
     let gameOver = false;
     let mergedIndexes = new Set();
+    let lastDirection = null;
+    let newTileIndex = -1;
 
     const BEST_SCORE_KEY = "xiaoxiao-2048-best-score";
 
@@ -476,10 +524,14 @@
 
     function addRandomTile() {
       const emptyCells = getEmptyCells();
-      if (emptyCells.length === 0) return;
+      if (emptyCells.length === 0) {
+        newTileIndex = -1;
+        return;
+      }
 
       const target = emptyCells[Math.floor(Math.random() * emptyCells.length)];
       board[target.row][target.col] = Math.random() < 0.9 ? 2 : 4;
+      newTileIndex = target.row * SIZE + target.col;
     }
 
     function cloneBoard(source) {
@@ -607,6 +659,7 @@
       }
 
       score += gainedTotal;
+      lastDirection = direction;
       addRandomTile();
       updateBestScore();
       render();
@@ -699,6 +752,12 @@
               cell.classList.add("high");
             }
 
+            if (index === newTileIndex) {
+              cell.classList.add("new-tile");
+            } else if (lastDirection) {
+              cell.classList.add(`slide-${lastDirection}`);
+            }
+
             if (mergedIndexes.has(index)) {
               cell.classList.add("pop");
             }
@@ -711,6 +770,10 @@
       scoreElement.textContent = score;
       bestScoreElement.textContent = Math.max(score, getBestScore());
       maxTileElement.textContent = getMaxTile() || 2;
+
+      /* class 已經留在這次建立的 DOM 上，狀態可清掉 */
+      lastDirection = null;
+      newTileIndex = -1;
     }
 
     function showOverlay(title, text, allowContinue) {
