@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  >
+
+  <title>2048｜2048</title>
+
+  <meta
+    name="description"
+    content="滑動數字方塊，合併相同數字並挑戰 2048。"
+  >
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      font-family: "Microsoft JhengHei", Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+    }
+
+    body {
+      min-height: 100vh;
+      overscroll-behavior: none;
+    }
+
+    .home-button {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+      display: inline-block;
+      padding: 10px 16px;
+      border-radius: 10px;
+      background: #334155;
+      color: white;
+      text-decoration: none;
+      font-size: 15px;
+      transition: 0.2s;
+    }
+
+    .home-button:hover {
+      background: #475569;
+      transform: translateY(-1px);
+    }
+
+    .container {
+      width: min(620px, 94%);
+      margin: auto;
+      padding: 34px 0 46px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      text-align: center;
+      font-size: 34px;
+    }
+
+    .description {
+      margin-bottom: 18px;
+      text-align: center;
+      color: #94a3b8;
+      line-height: 1.6;
+      font-size: 15px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    button {
+      border: none;
+      min-height: 42px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      background: #334155;
+      color: white;
+      font-family: inherit;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    button:hover {
+      background: #475569;
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    button.primary {
+      background: #2563eb;
+    }
+
+    button.primary:hover {
+      background: #3b82f6;
+    }
+
+    .score-bar {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .score-card {
+      min-width: 0;
+      padding: 10px 6px;
+      border-radius: 10px;
+      background: #1e293b;
+      color: #cbd5e1;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .score-value {
+      display: block;
+      margin-top: 3px;
+      color: #facc15;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .game-shell {
+      position: relative;
+      width: min(100%, 520px);
+      margin: 0 auto;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      padding: 10px;
+      border-radius: 18px;
+      background: #334155;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+      aspect-ratio: 1 / 1;
+      border-radius: 12px;
+      background: #475569;
+      color: #0f172a;
+      font-size: clamp(24px, 8vw, 46px);
+      font-weight: 800;
+      line-height: 1;
+      transition: transform 0.12s ease, background 0.15s ease;
+    }
+
+    .cell.empty {
+      color: transparent;
+      background: #475569;
+    }
+
+    .cell[data-value="2"]    { background: #e2e8f0; }
+    .cell[data-value="4"]    { background: #cbd5e1; }
+    .cell[data-value="8"]    { background: #fdba74; }
+    .cell[data-value="16"]   { background: #fb923c; }
+    .cell[data-value="32"]   { background: #f97316; color: white; }
+    .cell[data-value="64"]   { background: #ea580c; color: white; }
+    .cell[data-value="128"]  { background: #fde047; }
+    .cell[data-value="256"]  { background: #facc15; }
+    .cell[data-value="512"]  { background: #eab308; }
+    .cell[data-value="1024"] { background: #84cc16; color: white; }
+    .cell[data-value="2048"] { background: #22c55e; color: white; }
+
+    .cell.high {
+      background: #14b8a6;
+      color: white;
+      font-size: clamp(18px, 6vw, 34px);
+    }
+
+    .cell.pop {
+      animation: pop 0.16s ease;
+    }
+
+    @keyframes pop {
+      0%   { transform: scale(0.82); }
+      65%  { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      border-radius: 18px;
+      background: rgba(15, 23, 42, 0.78);
+      backdrop-filter: blur(4px);
+    }
+
+    .overlay.show {
+      display: flex;
+    }
+
+    .overlay-card {
+      width: min(320px, 90%);
+      padding: 24px;
+      border-radius: 16px;
+      background: #1e293b;
+      text-align: center;
+    }
+
+    .overlay-card h2 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    .overlay-card p {
+      margin: 0 0 16px;
+      color: #cbd5e1;
+      line-height: 1.6;
+    }
+
+    .overlay-actions {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .status {
+      min-height: 28px;
+      margin-top: 14px;
+      text-align: center;
+      color: #4ade80;
+      font-weight: 700;
+    }
+
+    .rules {
+      margin-top: 16px;
+      padding: 16px 18px;
+      border-radius: 14px;
+      background: #1e293b;
+      color: #cbd5e1;
+      line-height: 1.85;
+    }
+
+    .rules strong {
+      color: white;
+    }
+
+    .controls-hint {
+      margin-top: 10px;
+      color: #94a3b8;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    @media (max-width: 700px) {
+      .container {
+        width: 96%;
+        padding-top: 72px;
+      }
+
+      .home-button {
+        top: 12px;
+        left: 12px;
+        padding: 9px 13px;
+        font-size: 14px;
+      }
+
+      h1 {
+        font-size: 26px;
+      }
+
+      .description {
+        font-size: 13px;
+        margin-bottom: 14px;
+      }
+
+      button {
+        padding: 9px 12px;
+        font-size: 14px;
+      }
+
+      .score-bar {
+        gap: 5px;
+      }
+
+      .score-card {
+        padding: 8px 3px;
+        font-size: 12px;
+      }
+
+      .score-value {
+        font-size: 17px;
+      }
+
+      .board {
+        gap: 7px;
+        padding: 7px;
+        border-radius: 14px;
+      }
+
+      .cell {
+        border-radius: 9px;
+      }
+
+      .rules {
+        padding: 13px;
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <a class="home-button" href="../">
+    ← 回到首頁
+  </a>
+
+  <main class="container">
+
+    <h1>2048｜2048</h1>
+
+    <div class="description">
+      滑動數字方塊，讓相同數字合併，挑戰 2048。
+    </div>
+
+    <div class="toolbar">
+      <button id="newGameButton" class="primary" type="button">重新開始</button>
+    </div>
+
+    <div class="score-bar">
+      <div class="score-card">
+        分數
+        <span id="score" class="score-value">0</span>
+      </div>
+
+      <div class="score-card">
+        最高分
+        <span id="bestScore" class="score-value">0</span>
+      </div>
+
+      <div class="score-card">
+        最大方塊
+        <span id="maxTile" class="score-value">2</span>
+      </div>
+    </div>
+
+    <div class="game-shell">
+      <div
+        id="board"
+        class="board"
+        role="application"
+        aria-label="2048 遊戲棋盤"
+        tabindex="0"
+      ></div>
+
+      <div id="overlay" class="overlay" aria-live="polite">
+        <div class="overlay-card">
+          <h2 id="overlayTitle">遊戲結束</h2>
+          <p id="overlayText"></p>
+
+          <div class="overlay-actions">
+            <button id="continueButton" type="button">繼續挑戰</button>
+            <button id="overlayRestartButton" class="primary" type="button">重新開始</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="status" class="status" aria-live="polite"></div>
+
+    <div class="controls-hint">
+      電腦：方向鍵 / WASD　手機：上下左右滑動
+    </div>
+
+    <div class="rules">
+      <strong>遊戲規則：</strong>
+      上下左右滑動所有方塊。
+      <br>
+      相同數字的方塊碰在一起時，會合併成更大的數字。
+      <br>
+      每次有效移動後，棋盤會隨機新增一個 2 或 4。
+      <br>
+      合成 2048 即達成目標，也可以繼續挑戰更高分。
+    </div>
+
+  </main>
+
+  <script>
+    const SIZE = 4;
+    const boardElement = document.getElementById("board");
+    const scoreElement = document.getElementById("score");
+    const bestScoreElement = document.getElementById("bestScore");
+    const maxTileElement = document.getElementById("maxTile");
+    const statusElement = document.getElementById("status");
+    const overlay = document.getElementById("overlay");
+    const overlayTitle = document.getElementById("overlayTitle");
+    const overlayText = document.getElementById("overlayText");
+    const continueButton = document.getElementById("continueButton");
+    const newGameButton = document.getElementById("newGameButton");
+    const overlayRestartButton = document.getElementById("overlayRestartButton");
+
+    let board = [];
+    let score = 0;
+    let hasWon = false;
+    let keepPlaying = false;
+    let gameOver = false;
+    let mergedIndexes = new Set();
+
+    const BEST_SCORE_KEY = "xiaoxiao-2048-best-score";
+
+    function getBestScore() {
+      const value = Number(localStorage.getItem(BEST_SCORE_KEY));
+      return Number.isFinite(value) ? value : 0;
+    }
+
+    function setBestScore(value) {
+      localStorage.setItem(BEST_SCORE_KEY, String(value));
+    }
+
+    function createEmptyBoard() {
+      return Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+    }
+
+    function newGame() {
+      board = createEmptyBoard();
+      score = 0;
+      hasWon = false;
+      keepPlaying = false;
+      gameOver = false;
+      mergedIndexes.clear();
+      hideOverlay();
+      statusElement.textContent = "";
+      addRandomTile();
+      addRandomTile();
+      render();
+      boardElement.focus({ preventScroll: true });
+    }
+
+    function getEmptyCells() {
+      const cells = [];
+
+      for (let row = 0; row < SIZE; row++) {
+        for (let col = 0; col < SIZE; col++) {
+          if (board[row][col] === 0) {
+            cells.push({ row, col });
+          }
+        }
+      }
+
+      return cells;
+    }
+
+    function addRandomTile() {
+      const emptyCells = getEmptyCells();
+      if (emptyCells.length === 0) return;
+
+      const target = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+      board[target.row][target.col] = Math.random() < 0.9 ? 2 : 4;
+    }
+
+    function cloneBoard(source) {
+      return source.map(row => [...row]);
+    }
+
+    function boardsEqual(a, b) {
+      for (let row = 0; row < SIZE; row++) {
+        for (let col = 0; col < SIZE; col++) {
+          if (a[row][col] !== b[row][col]) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    function slideAndMerge(line) {
+      const filtered = line.filter(value => value !== 0);
+      const result = [];
+      let gained = 0;
+      const mergedPositions = [];
+
+      for (let i = 0; i < filtered.length; i++) {
+        if (filtered[i] === filtered[i + 1]) {
+          const merged = filtered[i] * 2;
+          result.push(merged);
+          gained += merged;
+          mergedPositions.push(result.length - 1);
+          i++;
+        } else {
+          result.push(filtered[i]);
+        }
+      }
+
+      while (result.length < SIZE) {
+        result.push(0);
+      }
+
+      return {
+        line: result,
+        gained,
+        mergedPositions
+      };
+    }
+
+    function move(direction) {
+      if (gameOver) return;
+
+      const before = cloneBoard(board);
+      let gainedTotal = 0;
+      mergedIndexes = new Set();
+
+      if (direction === "left") {
+        for (let row = 0; row < SIZE; row++) {
+          const result = slideAndMerge(board[row]);
+          board[row] = result.line;
+          gainedTotal += result.gained;
+
+          result.mergedPositions.forEach(col => {
+            mergedIndexes.add(row * SIZE + col);
+          });
+        }
+      }
+
+      if (direction === "right") {
+        for (let row = 0; row < SIZE; row++) {
+          const reversed = [...board[row]].reverse();
+          const result = slideAndMerge(reversed);
+          board[row] = result.line.reverse();
+          gainedTotal += result.gained;
+
+          result.mergedPositions.forEach(index => {
+            const col = SIZE - 1 - index;
+            mergedIndexes.add(row * SIZE + col);
+          });
+        }
+      }
+
+      if (direction === "up") {
+        for (let col = 0; col < SIZE; col++) {
+          const column = [];
+          for (let row = 0; row < SIZE; row++) {
+            column.push(board[row][col]);
+          }
+
+          const result = slideAndMerge(column);
+          gainedTotal += result.gained;
+
+          for (let row = 0; row < SIZE; row++) {
+            board[row][col] = result.line[row];
+          }
+
+          result.mergedPositions.forEach(row => {
+            mergedIndexes.add(row * SIZE + col);
+          });
+        }
+      }
+
+      if (direction === "down") {
+        for (let col = 0; col < SIZE; col++) {
+          const column = [];
+          for (let row = SIZE - 1; row >= 0; row--) {
+            column.push(board[row][col]);
+          }
+
+          const result = slideAndMerge(column);
+          gainedTotal += result.gained;
+
+          const finalColumn = result.line.reverse();
+
+          for (let row = 0; row < SIZE; row++) {
+            board[row][col] = finalColumn[row];
+          }
+
+          result.mergedPositions.forEach(index => {
+            const row = SIZE - 1 - index;
+            mergedIndexes.add(row * SIZE + col);
+          });
+        }
+      }
+
+      if (boardsEqual(before, board)) {
+        return;
+      }
+
+      score += gainedTotal;
+      addRandomTile();
+      updateBestScore();
+      render();
+      checkGameState();
+    }
+
+    function updateBestScore() {
+      const best = getBestScore();
+
+      if (score > best) {
+        setBestScore(score);
+      }
+    }
+
+    function getMaxTile() {
+      let max = 0;
+
+      board.forEach(row => {
+        row.forEach(value => {
+          if (value > max) max = value;
+        });
+      });
+
+      return max;
+    }
+
+    function canMove() {
+      if (getEmptyCells().length > 0) {
+        return true;
+      }
+
+      for (let row = 0; row < SIZE; row++) {
+        for (let col = 0; col < SIZE; col++) {
+          const value = board[row][col];
+
+          if (col + 1 < SIZE && board[row][col + 1] === value) {
+            return true;
+          }
+
+          if (row + 1 < SIZE && board[row + 1][col] === value) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    }
+
+    function checkGameState() {
+      const maxTile = getMaxTile();
+
+      if (!hasWon && maxTile >= 2048 && !keepPlaying) {
+        hasWon = true;
+        showOverlay(
+          "達成 2048！",
+          `目前分數：${score}。你可以繼續挑戰更高數字。`,
+          true
+        );
+        return;
+      }
+
+      if (!canMove()) {
+        gameOver = true;
+        showOverlay(
+          "遊戲結束",
+          `本局分數：${score}，最大方塊：${maxTile}。`,
+          false
+        );
+      }
+    }
+
+    function render() {
+      boardElement.innerHTML = "";
+
+      board.forEach((row, rowIndex) => {
+        row.forEach((value, colIndex) => {
+          const cell = document.createElement("div");
+          const index = rowIndex * SIZE + colIndex;
+
+          cell.className = "cell";
+          cell.dataset.value = value || "";
+
+          if (value === 0) {
+            cell.classList.add("empty");
+            cell.textContent = "";
+          } else {
+            cell.textContent = value;
+
+            if (value > 2048) {
+              cell.classList.add("high");
+            }
+
+            if (mergedIndexes.has(index)) {
+              cell.classList.add("pop");
+            }
+          }
+
+          boardElement.appendChild(cell);
+        });
+      });
+
+      scoreElement.textContent = score;
+      bestScoreElement.textContent = Math.max(score, getBestScore());
+      maxTileElement.textContent = getMaxTile() || 2;
+    }
+
+    function showOverlay(title, text, allowContinue) {
+      overlayTitle.textContent = title;
+      overlayText.textContent = text;
+      continueButton.style.display = allowContinue ? "inline-block" : "none";
+      overlay.classList.add("show");
+    }
+
+    function hideOverlay() {
+      overlay.classList.remove("show");
+    }
+
+    function continueGame() {
+      keepPlaying = true;
+      hideOverlay();
+      statusElement.textContent = "繼續挑戰！";
+      boardElement.focus({ preventScroll: true });
+    }
+
+    function handleKeyDown(event) {
+      const key = event.key.toLowerCase();
+
+      const keyMap = {
+        arrowleft: "left",
+        a: "left",
+        arrowright: "right",
+        d: "right",
+        arrowup: "up",
+        w: "up",
+        arrowdown: "down",
+        s: "down"
+      };
+
+      const direction = keyMap[key];
+
+      if (!direction) return;
+
+      event.preventDefault();
+      move(direction);
+    }
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let pointerActive = false;
+
+    function handlePointerDown(event) {
+      if (event.pointerType === "mouse" && event.button !== 0) {
+        return;
+      }
+
+      pointerActive = true;
+      touchStartX = event.clientX;
+      touchStartY = event.clientY;
+
+      try {
+        boardElement.setPointerCapture(event.pointerId);
+      } catch (_) {}
+    }
+
+    function handlePointerUp(event) {
+      if (!pointerActive) return;
+      pointerActive = false;
+
+      const dx = event.clientX - touchStartX;
+      const dy = event.clientY - touchStartY;
+      const distance = Math.hypot(dx, dy);
+
+      if (distance < 24) return;
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+        move(dx > 0 ? "right" : "left");
+      } else {
+        move(dy > 0 ? "down" : "up");
+      }
+
+      try {
+        boardElement.releasePointerCapture(event.pointerId);
+      } catch (_) {}
+    }
+
+    boardElement.addEventListener("keydown", handleKeyDown);
+    boardElement.addEventListener("pointerdown", handlePointerDown);
+    boardElement.addEventListener("pointerup", handlePointerUp);
+    boardElement.addEventListener("pointercancel", () => {
+      pointerActive = false;
+    });
+
+    newGameButton.addEventListener("click", newGame);
+    overlayRestartButton.addEventListener("click", newGame);
+    continueButton.addEventListener("click", continueGame);
+
+    window.addEventListener("keydown", event => {
+      if (event.target === document.body) {
+        handleKeyDown(event);
+      }
+    });
+
+    bestScoreElement.textContent = getBestScore();
+    newGame();
+  </script>
+
+</body>
+</html>
