@@ -2198,26 +2198,67 @@
 
 
     const PLL_ALGORITHMS = [
+      /* PLL01 = Ub */
       ["PLL01","R2 U R U R' U' R' U' R' U R'"],
+
+      /* PLL02 = Ua */
       ["PLL02","R U' R U R U R U' R' U' R2"],
-      ["PLL03","x' R U' R D2 R' U R D2 R2"],
-      ["PLL04","x' R2 D2 R' U' R D2 R' U R'"],
-      ["PLL05","M2 U' M2 U' M' U2 M2 U2 M' U2"],
-      ["PLL06","M2 U' M2 U2 M2 U' M2"],
-      ["PLL07","y x' R U' R' D R U R' D' R U R' D R U' R' D'"],
+
+      /* PLL03 = Ab */
+      ["PLL03","x R2 D2 R U R' D2 R U' R x'"],
+
+      /* PLL04 = Aa */
+      ["PLL04","x R' U R' D2 R U' R' D2 R2 x'"],
+
+      /* PLL05 = Z */
+      ["PLL05","M2 U M2 U M' U2 M2 U2 M'"],
+
+      /* PLL06 = H */
+      ["PLL06","M2 U M2 U2 M2 U M2"],
+
+      /* PLL07 = E */
+      ["PLL07","x' R U' R' D R U R' D' R U R' D R U' R' D' x"],
+
+      /* PLL08 = T */
       ["PLL08","R U R' U' R' F R2 U' R' U' R U R' F'"],
-      ["PLL09","R' U R' d' R' F' R2 U' R' U R' F R F"],
+
+      /* PLL09 = V */
+      ["PLL09","R' U R' U' y R' F' R2 U' R' U R' F R F"],
+
+      /* PLL10 = F */
       ["PLL10","R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R"],
-      ["PLL11","R' U2 R U2 R' F R U R' U' R' F' R2 U'"],
-      ["PLL12","R U2 R' U2 R B' R' U' R U R B R2 U"],
-      ["PLL13","R U R' F' R U R' U' R' F R2 U' R' U'"],
-      ["PLL14","x R2 F R F' R U2 r' U r U2"],
+
+      /* PLL11 = Rb */
+      ["PLL11","R' U2 R U2 R' F R U R' U' R' F' R2"],
+
+      /* PLL12 = Ra */
+      ["PLL12","R U' R' U' R U R D R' U' R D' R' U2 R'"],
+
+      /* PLL13 = Jb */
+      ["PLL13","R U R' F' R U R' U' R' F R2 U' R'"],
+
+      /* PLL14 = Ja */
+      ["PLL14","R' U L' U2 R U' R' U2 R L"],
+
+      /* PLL15 = Y */
       ["PLL15","F R U' R' U' R U R' F' R U R' U' R' F R F'"],
-      ["PLL16","R U R' y' R2 u' R U' R' U R' u R2"],
-      ["PLL17","R2 u' R U' R U R' u R2 y R U' R'"],
-      ["PLL18","R U R' y' R2 u' R U' R' U R' u R2"],
-      ["PLL19","R2 u R' U R' U' R u' R2 y' R' U R"],
+
+      /* PLL16 = Gd */
+      ["PLL16","D' R U R' U' D R2 U' R U' R' U R' U R2"],
+
+      /* PLL17 = Gc */
+      ["PLL17","R2 U' R U' R U R' U R2 D' U R U' R' D"],
+
+      /* PLL18 = Gb */
+      ["PLL18","F' U' F R2 u R' U R U' R u' R2"],
+
+      /* PLL19 = Ga */
+      ["PLL19","R2 U R' U R' U' R U' R2 D U' R' U R D'"],
+
+      /* PLL20 = Nb */
       ["PLL20","R' U R U' R' F' U' F R U R' F R' F' R U' R"],
+
+      /* PLL21 = Na */
       ["PLL21","R U R' U R U R' F' R U R' U' R' F R2 U' R' U2 R U' R'"]
     ];
 
@@ -2522,20 +2563,25 @@
 
           for (let post = 0; post < 4; post++) {
             const suffix = aufFormula(post);
-            const result = applyFormulaToState(
-              middle,
+            const fullFormula = joinFormula(
+              prefix,
+              algorithm,
               suffix
             );
 
+            const result = applyFormulaToState(
+              normalized,
+              fullFormula
+            );
+
+            /*
+              PLL 提示只在整條公式經模擬後
+              確實能完成魔方時才採用。
+            */
             if (isSolvedState(result)) {
               return {
                 name,
-                formula:
-                  joinFormula(
-                    prefix,
-                    algorithm,
-                    suffix
-                  )
+                formula: fullFormula
               };
             }
           }
