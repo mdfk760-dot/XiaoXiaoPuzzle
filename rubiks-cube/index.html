@@ -204,7 +204,7 @@
       display: grid;
 
       grid-template-columns:
-        repeat(3, minmax(0, 1fr));
+        repeat(4, minmax(0, 1fr));
 
       gap: 8px;
 
@@ -368,6 +368,64 @@
 
 
     /* ================================
+       提示
+    ================================= */
+
+    .hint-area {
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .hint-toggle {
+      min-width: 120px;
+    }
+
+    .hint-panel {
+      display: none;
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 14px;
+      background: #1e293b;
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .hint-panel.show {
+      display: block;
+    }
+
+    .hint-case {
+      margin-top: 10px;
+      color: white;
+      font-weight: 700;
+      line-height: 1.7;
+      word-break: break-word;
+    }
+
+    .hint-preview {
+      display: flex;
+      justify-content: center;
+      margin-top: 4px;
+    }
+
+    #hintCanvas {
+      width: 150px;
+      height: 150px;
+      max-width: 44vw;
+      max-height: 44vw;
+      border-radius: 10px;
+      background: #0f172a;
+    }
+
+    .hint-actions {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+
+    /* ================================
        訊息
     ================================= */
 
@@ -453,6 +511,9 @@
 
 
       .info-bar {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+
         gap: 5px;
       }
 
@@ -619,6 +680,20 @@
 
       </div>
 
+
+      <div class="info-item">
+
+        目前進度：
+
+        <span
+          id="progressText"
+          class="info-value"
+        >
+          F2L
+        </span>
+
+      </div>
+
     </div>
 
 
@@ -660,6 +735,63 @@
       <span id="scrambleText">
         -
       </span>
+
+    </div>
+
+
+    <div class="hint-area">
+
+      <button
+        id="hintToggleButton"
+        class="hint-toggle"
+        type="button"
+        disabled
+      >
+        顯示提示
+      </button>
+
+
+      <div
+        id="hintPanel"
+        class="hint-panel"
+      >
+
+        <div class="hint-preview">
+          <canvas
+            id="hintCanvas"
+            width="300"
+            height="300"
+            aria-label="目前 OLL 或 PLL 狀態示意圖"
+          ></canvas>
+        </div>
+
+
+        <div
+          id="hintCase"
+          class="hint-case"
+        ></div>
+
+
+        <div class="hint-actions">
+
+          <button
+            id="demoFormulaButton"
+            type="button"
+          >
+            展示公式
+          </button>
+
+          <button
+            id="restoreFormulaButton"
+            type="button"
+            disabled
+          >
+            復原公式
+          </button>
+
+        </div>
+
+      </div>
 
     </div>
 
@@ -742,6 +874,48 @@
     const statusElement =
       document.getElementById(
         "statusText"
+      );
+
+
+    const progressElement =
+      document.getElementById(
+        "progressText"
+      );
+
+
+    const hintToggleButton =
+      document.getElementById(
+        "hintToggleButton"
+      );
+
+
+    const hintPanel =
+      document.getElementById(
+        "hintPanel"
+      );
+
+
+    const hintCanvas =
+      document.getElementById(
+        "hintCanvas"
+      );
+
+
+    const hintCaseElement =
+      document.getElementById(
+        "hintCase"
+      );
+
+
+    const demoFormulaButton =
+      document.getElementById(
+        "demoFormulaButton"
+      );
+
+
+    const restoreFormulaButton =
+      document.getElementById(
+        "restoreFormulaButton"
       );
 
 
@@ -1947,6 +2121,854 @@
 
 
 
+
+    /* ==================================================
+       CFOP 進度 / OLL / PLL 提示
+    ================================================== */
+
+    const FACE_COLOR_HEX = {
+      W: "#f8fafc",
+      Y: "#facc15",
+      G: "#22c55e",
+      B: "#2563eb",
+      R: "#ef4444",
+      O: "#f97316"
+    };
+
+
+    const OLL_ALGORITHMS = [
+      ["OLL01","R U2 R2 F R F' U2 R' F R F'"],
+      ["OLL02","F R U R' U' F' f R U R' U' f'"],
+      ["OLL03","r' R2 U R' U r U2 r' U M'"],
+      ["OLL04","l L2 U' L U' l' U2 l U' M'"],
+      ["OLL05","r' U2 R U R' U r"],
+      ["OLL06","r U2 R' U' R U' r'"],
+      ["OLL07","r U R' U R U2 r'"],
+      ["OLL08","r' U' R U' R' U2 r"],
+      ["OLL09","R U R' U' R' F R2 U R' U' F'"],
+      ["OLL10","R U R' U R' F R F' R U2 R'"],
+      ["OLL11","r' R2 U R' U R U2 R' U M'"],
+      ["OLL12","r R2 U' R U' R' U2 R U' R r'"],
+      ["OLL13","F U R U' R2 F' R U R U' R'"],
+      ["OLL14","R' F R U R' F' R F U' F'"],
+      ["OLL15","r' U' r R' U' R U r' U r"],
+      ["OLL16","y2 r U r' R U R' U' r U' r'"],
+      ["OLL17","R U R' U R' F R F' U2 R' F R F'"],
+      ["OLL18","R U2 R2 F R F' U2 M' U R U' r'"],
+      ["OLL19","r' U2 R U R' U r2 U2 R' U' R U' r'"],
+      ["OLL20","M U R U R' U' M2 U R U' r'"],
+      ["OLL21","R U2 R' U' R U R' U' R U' R'"],
+      ["OLL22","R U2 R2 U' R2 U' R2 U2 R"],
+      ["OLL23","R2 D R' U2 R D' R' U2 R'"],
+      ["OLL24","r U R' U' r' F R F'"],
+      ["OLL25","F' r U R' U' r' F R"],
+      ["OLL26","R U2 R' U' R U' R'"],
+      ["OLL27","R U R' U R U2 R'"],
+      ["OLL28","r U R' U' M U R U' R'"],
+      ["OLL29","R U R' U' R U' R' F' U' F R U R'"],
+      ["OLL30","F U R U2 R' U' R U2 R' U' F'"],
+      ["OLL31","y2 R' U' F U R U' R' F' R"],
+      ["OLL32","R U B' U' R' U R B R'"],
+      ["OLL33","R U R' U' R' F R F'"],
+      ["OLL34","R U R' U' y' r' U' R U M'"],
+      ["OLL35","R U2 R2 F R F' R U2 R'"],
+      ["OLL36","R' U' R U' R' U R U l U' R' U"],
+      ["OLL37","F R U' R' U' R U R' F'"],
+      ["OLL38","R U R' U R U' R' U' R' F R F'"],
+      ["OLL39","L F' L' U' L U F U' L'"],
+      ["OLL40","R' F R U R' U' F' U R"],
+      ["OLL41","R U R' U R U2 R' F R U R' U' F'"],
+      ["OLL42","R' U' R U' R' U2 R F R U R' U' F'"],
+      ["OLL43","R' U' F' U F R"],
+      ["OLL44","F U R U' R' F'"],
+      ["OLL45","F R U R' U' F'"],
+      ["OLL46","R' U' R' F R F' U R"],
+      ["OLL47","R' U' l' U R U' R' U l F' U R"],
+      ["OLL48","F R U R' U' R U R' U' F'"],
+      ["OLL49","l U' l2 U l2 U l2 U' l"],
+      ["OLL50","r' U r2 U' r2 U' r2 U r'"],
+      ["OLL51","y2 F U R U' R' U R U' R' F'"],
+      ["OLL52","R' U' R U' R' d R' U R B"],
+      ["OLL53","r' U2 R U R' U' R U R' U r"],
+      ["OLL54","r U2 R' U' R U R' U' R U' r'"],
+      ["OLL55","y R' F R U R U' R2 F' R2 U' R' U R U R'"],
+      ["OLL56","r' U' r U' R' U R U' R' U R r' U r"],
+      ["OLL57","R U R' U' M' U R U' r'"]
+    ];
+
+
+    const PLL_ALGORITHMS = [
+      ["PLL01","R2 U R U R' U' R' U' R' U R'"],
+      ["PLL02","R U' R U R U R U' R' U' R2"],
+      ["PLL03","x' R U' R D2 R' U R D2 R2"],
+      ["PLL04","x' R2 D2 R' U' R D2 R' U R'"],
+      ["PLL05","M2 U' M2 U' M' U2 M2 U2 M' U2"],
+      ["PLL06","M2 U' M2 U2 M2 U' M2"],
+      ["PLL07","y x' R U' R' D R U R' D' R U R' D R U' R' D'"],
+      ["PLL08","R U R' U' R' F R2 U' R' U' R U R' F'"],
+      ["PLL09","R' U R' d' R' F' R2 U' R' U R' F R F"],
+      ["PLL10","R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R"],
+      ["PLL11","R' U2 R U2 R' F R U R' U' R' F' R2 U'"],
+      ["PLL12","R U2 R' U2 R B' R' U' R U R B R2 U"],
+      ["PLL13","R U R' F' R U R' U' R' F R2 U' R' U'"],
+      ["PLL14","x R2 F R F' R U2 r' U r U2"],
+      ["PLL15","F R U' R' U' R U R' F' R U R' U' R' F R F'"],
+      ["PLL16","R U R' y' R2 u' R U' R' U R' u R2"],
+      ["PLL17","R2 u' R U' R U R' u R2 y R U' R'"],
+      ["PLL18","R U R' y' R2 u' R U' R' U R' u R2"],
+      ["PLL19","R2 u R' U R' U' R u' R2 y' R' U R"],
+      ["PLL20","R' U R U' R' F' U' F R U R' F R' F' R U' R"],
+      ["PLL21","R U R' U R U R' F' R U R' U' R' F R2 U' R' U2 R U' R'"]
+    ];
+
+
+    function cloneStickerState(source) {
+      return source.map(sticker => ({ ...sticker }));
+    }
+
+
+    function rotateStateSlice(state, axis, layer, direction) {
+      state.forEach(sticker => {
+        if (sticker[axis] !== layer) return;
+
+        const position = rotateVector(
+          sticker.x,
+          sticker.y,
+          sticker.z,
+          axis,
+          direction
+        );
+
+        const normal = rotateVector(
+          sticker.nx,
+          sticker.ny,
+          sticker.nz,
+          axis,
+          direction
+        );
+
+        sticker.x = position.x;
+        sticker.y = position.y;
+        sticker.z = position.z;
+        sticker.nx = normal.x;
+        sticker.ny = normal.y;
+        sticker.nz = normal.z;
+      });
+    }
+
+
+    function normalizeStateForLastLayer(source, lastLayerFace) {
+      const state = cloneStickerState(source);
+
+      if (lastLayerFace === "D") {
+        rotateStateSlice(state, "x", -1, 1);
+        rotateStateSlice(state, "x", 0, 1);
+        rotateStateSlice(state, "x", 1, 1);
+
+        rotateStateSlice(state, "x", -1, 1);
+        rotateStateSlice(state, "x", 0, 1);
+        rotateStateSlice(state, "x", 1, 1);
+      }
+
+      return state;
+    }
+
+
+    function getFaceCenterColor(state, face) {
+      const center = state.find(sticker => {
+        if (getStickerFace(sticker) !== face) return false;
+
+        if (face === "U" || face === "D") {
+          return sticker.x === 0 && sticker.z === 0;
+        }
+
+        if (face === "F" || face === "B") {
+          return sticker.x === 0 && sticker.y === 0;
+        }
+
+        return sticker.y === 0 && sticker.z === 0;
+      });
+
+      return center ? center.color : null;
+    }
+
+
+    function isF2LCompleteState(state) {
+      const centerColors = {
+        D: getFaceCenterColor(state, "D"),
+        F: getFaceCenterColor(state, "F"),
+        B: getFaceCenterColor(state, "B"),
+        L: getFaceCenterColor(state, "L"),
+        R: getFaceCenterColor(state, "R")
+      };
+
+      return state.every(sticker => {
+        if (sticker.y === 1) return true;
+
+        const face = getStickerFace(sticker);
+
+        if (face === "U") return true;
+
+        return sticker.color === centerColors[face];
+      });
+    }
+
+
+    function isOLLCompleteState(state) {
+      const topColor = getFaceCenterColor(state, "U");
+
+      return state
+        .filter(sticker => getStickerFace(sticker) === "U")
+        .every(sticker => sticker.color === topColor);
+    }
+
+
+    function isSolvedState(state) {
+      const faces = ["U","D","L","R","F","B"];
+
+      return faces.every(face => {
+        const faceStickers = state.filter(
+          sticker => getStickerFace(sticker) === face
+        );
+
+        if (faceStickers.length !== 9) return false;
+
+        const color = faceStickers[0].color;
+
+        return faceStickers.every(
+          sticker => sticker.color === color
+        );
+      });
+    }
+
+
+    function detectProgress() {
+      if (isSolved()) {
+        return {
+          stage: "完成",
+          lastLayerFace: null
+        };
+      }
+
+      for (const face of ["U", "D"]) {
+        const normalized = normalizeStateForLastLayer(
+          stickers,
+          face
+        );
+
+        if (isF2LCompleteState(normalized)) {
+          if (isOLLCompleteState(normalized)) {
+            return {
+              stage: "PLL",
+              lastLayerFace: face
+            };
+          }
+
+          return {
+            stage: "OLL",
+            lastLayerFace: face
+          };
+        }
+      }
+
+      return {
+        stage: "F2L",
+        lastLayerFace: null
+      };
+    }
+
+
+    function baseAtomicMoves(symbol) {
+      const table = {
+        R: [["x", 1, -1]],
+        L: [["x",-1,  1]],
+        U: [["y", 1, -1]],
+        D: [["y",-1,  1]],
+        F: [["z", 1, -1]],
+        B: [["z",-1,  1]],
+        M: [["x", 0,  1]],
+
+        r: [["x", 1, -1],["x",0,-1]],
+        l: [["x",-1,  1],["x",0, 1]],
+        u: [["y", 1, -1],["y",0,-1]],
+        d: [["y",-1,  1],["y",0, 1]],
+        f: [["z", 1, -1],["z",0,-1]],
+        b: [["z",-1,  1],["z",0, 1]],
+
+        x: [["x",-1,-1],["x",0,-1],["x",1,-1]],
+        y: [["y",-1,-1],["y",0,-1],["y",1,-1]],
+        z: [["z",-1,-1],["z",0,-1],["z",1,-1]]
+      };
+
+      return table[symbol] || [];
+    }
+
+
+    function parseFormula(formula) {
+      const cleaned = formula
+        .replace(/[()\-]/g, " ")
+        .replace(/[′’]/g, "'")
+        .replace(/([A-Za-z])'2/g, "$12")
+        .replace(/([A-Za-z])2'/g, "$12");
+
+      const tokens = cleaned
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+      const atoms = [];
+
+      for (const token of tokens) {
+        const symbol = token[0];
+
+        if (!baseAtomicMoves(symbol).length) {
+          continue;
+        }
+
+        const turns = token.includes("2") ? 2 : 1;
+        const prime = token.includes("'");
+
+        for (let turn = 0; turn < turns; turn++) {
+          for (const [axis, layer, baseDirection] of baseAtomicMoves(symbol)) {
+            atoms.push({
+              axis,
+              layer,
+              direction:
+                prime
+                  ? -baseDirection
+                  : baseDirection
+            });
+          }
+        }
+      }
+
+      return atoms;
+    }
+
+
+    function applyFormulaToState(state, formula) {
+      const copy = cloneStickerState(state);
+
+      for (const move of parseFormula(formula)) {
+        rotateStateSlice(
+          copy,
+          move.axis,
+          move.layer,
+          move.direction
+        );
+      }
+
+      return copy;
+    }
+
+
+    function aufFormula(index) {
+      return ["", "U", "U2", "U'"][index] || "";
+    }
+
+
+    function joinFormula(...parts) {
+      return parts
+        .filter(part => part && part.trim())
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+
+    function findOLLHint(normalized) {
+      for (let auf = 0; auf < 4; auf++) {
+        const prefix = aufFormula(auf);
+        const setup = applyFormulaToState(
+          normalized,
+          prefix
+        );
+
+        for (const [name, algorithm] of OLL_ALGORITHMS) {
+          const result = applyFormulaToState(
+            setup,
+            algorithm
+          );
+
+          if (
+            isF2LCompleteState(result) &&
+            isOLLCompleteState(result)
+          ) {
+            return {
+              name,
+              formula: joinFormula(prefix, algorithm)
+            };
+          }
+        }
+      }
+
+      return null;
+    }
+
+
+    function findPLLHint(normalized) {
+      for (let pre = 0; pre < 4; pre++) {
+        const prefix = aufFormula(pre);
+        const setup = applyFormulaToState(
+          normalized,
+          prefix
+        );
+
+        for (const [name, algorithm] of PLL_ALGORITHMS) {
+          const middle = applyFormulaToState(
+            setup,
+            algorithm
+          );
+
+          for (let post = 0; post < 4; post++) {
+            const suffix = aufFormula(post);
+            const result = applyFormulaToState(
+              middle,
+              suffix
+            );
+
+            if (isSolvedState(result)) {
+              return {
+                name,
+                formula:
+                  joinFormula(
+                    prefix,
+                    algorithm,
+                    suffix
+                  )
+              };
+            }
+          }
+        }
+      }
+
+      return null;
+    }
+
+
+    function inverseFormula(formula) {
+      const tokens = formula
+        .replace(/[()\-]/g, " ")
+        .replace(/[′’]/g, "'")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+      return tokens
+        .reverse()
+        .map(token => {
+          if (token.includes("2")) {
+            return token
+              .replace("'2","2")
+              .replace("2'","2");
+          }
+
+          return token.includes("'")
+            ? token.replace("'","")
+            : token + "'";
+        })
+        .join(" ");
+    }
+
+
+    let currentProgress = {
+      stage: "F2L",
+      lastLayerFace: null
+    };
+
+    let currentHint = null;
+    let demoApplied = false;
+
+
+    function hideHintPanel() {
+      hintPanel.classList.remove("show");
+      hintToggleButton.textContent = "顯示提示";
+    }
+
+
+    function updateProgressUI() {
+      currentProgress = detectProgress();
+
+      progressElement.textContent =
+        currentProgress.stage;
+
+      const hintEnabled =
+        currentProgress.stage === "OLL" ||
+        currentProgress.stage === "PLL";
+
+      hintToggleButton.disabled =
+        !hintEnabled ||
+        isAnimating;
+
+      if (!hintEnabled) {
+        currentHint = null;
+        demoApplied = false;
+        restoreFormulaButton.disabled = true;
+        hideHintPanel();
+      }
+    }
+
+
+    function getNormalizedHintState() {
+      if (!currentProgress.lastLayerFace) {
+        return null;
+      }
+
+      return normalizeStateForLastLayer(
+        stickers,
+        currentProgress.lastLayerFace
+      );
+    }
+
+
+    function getHintForCurrentState() {
+      const normalized =
+        getNormalizedHintState();
+
+      if (!normalized) return null;
+
+      if (currentProgress.stage === "OLL") {
+        return findOLLHint(normalized);
+      }
+
+      if (currentProgress.stage === "PLL") {
+        return findPLLHint(normalized);
+      }
+
+      return null;
+    }
+
+
+    function getTopStickerAt(state, x, z) {
+      return state.find(sticker =>
+        sticker.x === x &&
+        sticker.z === z &&
+        getStickerFace(sticker) === "U"
+      );
+    }
+
+
+    function getSideStickerAt(state, face, index) {
+      if (face === "F") {
+        return state.find(sticker =>
+          sticker.x === index - 1 &&
+          sticker.y === 1 &&
+          sticker.z === 1 &&
+          getStickerFace(sticker) === "F"
+        );
+      }
+
+      if (face === "B") {
+        return state.find(sticker =>
+          sticker.x === 1 - index &&
+          sticker.y === 1 &&
+          sticker.z === -1 &&
+          getStickerFace(sticker) === "B"
+        );
+      }
+
+      if (face === "L") {
+        return state.find(sticker =>
+          sticker.x === -1 &&
+          sticker.y === 1 &&
+          sticker.z === 1 - index &&
+          getStickerFace(sticker) === "L"
+        );
+      }
+
+      return state.find(sticker =>
+        sticker.x === 1 &&
+        sticker.y === 1 &&
+        sticker.z === index - 1 &&
+        getStickerFace(sticker) === "R"
+      );
+    }
+
+
+    function drawHintPreview() {
+      const state =
+        getNormalizedHintState();
+
+      if (!state) return;
+
+      const ctx =
+        hintCanvas.getContext("2d");
+
+      const w = hintCanvas.width;
+      const h = hintCanvas.height;
+
+      ctx.clearRect(0, 0, w, h);
+
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(0, 0, w, h);
+
+      const topColor =
+        getFaceCenterColor(state, "U");
+
+      const cell = 52;
+      const gap = 5;
+      const startX = 67;
+      const startY = 67;
+
+      const drawSquare = (
+        x,
+        y,
+        size,
+        color
+      ) => {
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, size, size);
+      };
+
+      for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 3; col++) {
+          const x = col - 1;
+          const z = row - 1;
+
+          const sticker =
+            getTopStickerAt(
+              state,
+              x,
+              z
+            );
+
+          const color =
+            currentProgress.stage === "OLL"
+              ? (
+                  sticker &&
+                  sticker.color === topColor
+                    ? FACE_COLOR_HEX[topColor]
+                    : "#334155"
+                )
+              : (
+                  sticker
+                    ? FACE_COLOR_HEX[sticker.color]
+                    : "#334155"
+                );
+
+          drawSquare(
+            startX + col * (cell + gap),
+            startY + row * (cell + gap),
+            cell,
+            color
+          );
+        }
+      }
+
+      const sideFaces = [
+        ["B", startX, 44, "horizontal"],
+        ["F", startX, 244, "horizontal"],
+        ["L", 44, startY, "vertical"],
+        ["R", 244, startY, "vertical"]
+      ];
+
+      for (
+        const [
+          face,
+          sx,
+          sy,
+          orientation
+        ] of sideFaces
+      ) {
+        for (let i = 0; i < 3; i++) {
+          const sticker =
+            getSideStickerAt(
+              state,
+              face,
+              i
+            );
+
+          const color =
+            sticker
+              ? FACE_COLOR_HEX[sticker.color]
+              : "#334155";
+
+          if (orientation === "horizontal") {
+            drawSquare(
+              sx + i * (cell + gap),
+              sy,
+              cell,
+              13,
+              color
+            );
+          } else {
+            drawSquare(
+              sx,
+              sy + i * (cell + gap),
+              13,
+              cell,
+              color
+            );
+          }
+        }
+      }
+    }
+
+
+    function mapMoveToActualFrame(
+      move,
+      lastLayerFace
+    ) {
+      if (lastLayerFace !== "D") {
+        return { ...move };
+      }
+
+      if (move.axis === "x") {
+        return { ...move };
+      }
+
+      return {
+        axis: move.axis,
+        layer: -move.layer,
+        direction: -move.direction
+      };
+    }
+
+
+    async function playFormula(
+      formula,
+      restoring = false
+    ) {
+      if (isAnimating) return;
+      if (!currentProgress.lastLayerFace) return;
+
+      isAnimating = true;
+      controls.enabled = false;
+
+      hintToggleButton.disabled = true;
+      demoFormulaButton.disabled = true;
+      restoreFormulaButton.disabled = true;
+      scrambleButton.disabled = true;
+      resetButton.disabled = true;
+
+      const frameFace =
+        currentProgress.lastLayerFace;
+
+      const moves =
+        parseFormula(formula);
+
+      for (const normalizedMove of moves) {
+        const move =
+          mapMoveToActualFrame(
+            normalizedMove,
+            frameFace
+          );
+
+        applySliceToStickers(
+          move.axis,
+          move.layer,
+          move.direction
+        );
+
+        await rotateLayer3D(
+          move.axis,
+          move.layer,
+          move.direction,
+          true
+        );
+      }
+
+      isAnimating = false;
+      controls.enabled = true;
+
+      scrambleButton.disabled = false;
+      resetButton.disabled = false;
+
+      updateProgressUI();
+
+      if (restoring) {
+        demoApplied = false;
+        restoreFormulaButton.disabled = true;
+      } else {
+        demoApplied = true;
+        restoreFormulaButton.disabled = false;
+      }
+
+      demoFormulaButton.disabled = false;
+      hintToggleButton.disabled =
+        !(
+          currentProgress.stage === "OLL" ||
+          currentProgress.stage === "PLL"
+        );
+
+      drawHintPreview();
+    }
+
+
+    function showCurrentHint() {
+      currentHint =
+        getHintForCurrentState();
+
+      if (!currentHint) {
+        hintCaseElement.textContent =
+          "目前狀態暫時無法辨識對應公式。";
+
+        demoFormulaButton.disabled = true;
+        restoreFormulaButton.disabled = true;
+      } else {
+        hintCaseElement.textContent =
+          currentHint.name +
+          "：" +
+          currentHint.formula;
+
+        demoFormulaButton.disabled = false;
+        restoreFormulaButton.disabled =
+          !demoApplied;
+      }
+
+      drawHintPreview();
+    }
+
+
+    hintToggleButton.addEventListener(
+      "click",
+      () => {
+        if (hintToggleButton.disabled) return;
+
+        const opening =
+          !hintPanel.classList.contains("show");
+
+        if (opening) {
+          showCurrentHint();
+          hintPanel.classList.add("show");
+          hintToggleButton.textContent = "隱藏提示";
+        } else {
+          hideHintPanel();
+        }
+      }
+    );
+
+
+    demoFormulaButton.addEventListener(
+      "click",
+      async () => {
+        if (!currentHint) return;
+
+        await playFormula(
+          currentHint.formula,
+          false
+        );
+      }
+    );
+
+
+    restoreFormulaButton.addEventListener(
+      "click",
+      async () => {
+        if (!currentHint || !demoApplied) {
+          return;
+        }
+
+        await playFormula(
+          inverseFormula(
+            currentHint.formula
+          ),
+          true
+        );
+      }
+    );
+
+
     /* ==================================================
        遊戲資訊
     ================================================== */
@@ -1976,6 +2998,8 @@
 
       moveCountElement.textContent =
         moveCount;
+
+      updateProgressUI();
 
     }
 
@@ -2134,6 +3158,15 @@
       }
 
 
+      demoApplied =
+        false;
+
+      restoreFormulaButton.disabled =
+        true;
+
+      hideHintPanel();
+
+
       isAnimating =
         true;
 
@@ -2210,6 +3243,8 @@
 
       isAnimating =
         false;
+
+      updateProgressUI();
 
     }
 
@@ -3250,6 +4285,18 @@
       createSolvedStickerState();
 
 
+      currentHint =
+        null;
+
+      demoApplied =
+        false;
+
+      restoreFormulaButton.disabled =
+        true;
+
+      hideHintPanel();
+
+
       const scramble =
         generateScramble(
           25
@@ -3324,6 +4371,9 @@
         "遊戲中";
 
 
+      updateProgressUI();
+
+
       messageElement.textContent =
         "";
 
@@ -3364,6 +4414,18 @@
       createSolvedStickerState();
 
 
+      currentHint =
+        null;
+
+      demoApplied =
+        false;
+
+      restoreFormulaButton.disabled =
+        true;
+
+      hideHintPanel();
+
+
       moveCount =
         0;
 
@@ -3384,6 +4446,9 @@
 
       statusElement.textContent =
         "完成狀態";
+
+
+      updateProgressUI();
 
 
       messageElement.textContent =
@@ -3534,6 +4599,9 @@
 
 
     render();
+
+
+    updateProgressUI();
 
 
     /*
