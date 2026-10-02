@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Memory Match｜記憶翻牌</title>
+
+  <meta
+    name="description"
+    content="翻開卡片並找出所有相同圖案的配對，也可以上傳自己的圖片遊玩。"
+  >
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      font-family: "Microsoft JhengHei", Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    .home-button {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+      display: inline-block;
+      padding: 10px 16px;
+      border-radius: 10px;
+      background: #334155;
+      color: white;
+      text-decoration: none;
+      font-size: 15px;
+      transition: 0.2s;
+    }
+
+    .home-button:hover {
+      background: #475569;
+      transform: translateY(-1px);
+    }
+
+    .container {
+      width: min(900px, 94%);
+      margin: auto;
+      padding: 34px 0 50px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      text-align: center;
+      font-size: 32px;
+    }
+
+    .description {
+      margin-bottom: 18px;
+      text-align: center;
+      color: #94a3b8;
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    button,
+    select,
+    .upload-label {
+      min-height: 42px;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 15px;
+    }
+
+    button,
+    .upload-label {
+      background: #334155;
+      color: white;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    button:hover,
+    .upload-label:hover {
+      background: #475569;
+    }
+
+    button:active,
+    .upload-label:active {
+      transform: scale(0.97);
+    }
+
+    button.primary {
+      background: #2563eb;
+    }
+
+    button.primary:hover {
+      background: #3b82f6;
+    }
+
+    button.danger {
+      background: #7f1d1d;
+    }
+
+    button.danger:hover {
+      background: #991b1b;
+    }
+
+    select {
+      background: #1e293b;
+      color: white;
+      border: 1px solid #475569;
+      cursor: pointer;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .info-bar {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .info-item {
+      min-width: 0;
+      padding: 10px 5px;
+      border-radius: 10px;
+      background: #1e293b;
+      color: #cbd5e1;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .info-value {
+      display: block;
+      margin-top: 3px;
+      color: #facc15;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .upload-panel {
+      margin-bottom: 14px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: #1e293b;
+      color: #cbd5e1;
+      line-height: 1.7;
+    }
+
+    .upload-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .upload-status {
+      color: #cbd5e1;
+      font-size: 14px;
+    }
+
+    .upload-status strong {
+      color: white;
+    }
+
+    .thumbs {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .thumb {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+      border-radius: 10px;
+      background: #0f172a;
+      border: 1px solid #475569;
+    }
+
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .thumb-number {
+      position: absolute;
+      left: 5px;
+      bottom: 5px;
+      min-width: 22px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.78);
+      color: white;
+      font-size: 11px;
+      text-align: center;
+    }
+
+    .game-panel {
+      position: relative;
+      padding: 14px;
+      border-radius: 18px;
+      background: #1e293b;
+    }
+
+    .board {
+      display: grid;
+      gap: 10px;
+      width: 100%;
+      margin: auto;
+    }
+
+    .board.cols-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .board.cols-5 {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .board.cols-6 {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    .card {
+      position: relative;
+      min-width: 0;
+      aspect-ratio: 1 / 1;
+      border: none;
+      padding: 0;
+      background: transparent;
+      perspective: 900px;
+      cursor: pointer;
+    }
+
+    .card-inner {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+      transition: transform 0.34s ease;
+    }
+
+    .card.flipped .card-inner,
+    .card.matched .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 12px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border: 2px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .card-back {
+      background:
+        linear-gradient(135deg, #2563eb, #7c3aed);
+      color: white;
+      font-size: clamp(20px, 5vw, 34px);
+      font-weight: 900;
+    }
+
+    .card-back::after {
+      content: "?";
+      opacity: 0.95;
+    }
+
+    .card-front {
+      transform: rotateY(180deg);
+      background: #f8fafc;
+      color: #0f172a;
+      font-size: clamp(28px, 7vw, 54px);
+      font-weight: 800;
+    }
+
+    .card-front img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card.matched {
+      cursor: default;
+    }
+
+    .card.matched .card-front {
+      box-shadow: inset 0 0 0 3px #22c55e;
+    }
+
+    .card.shake .card-inner {
+      animation: shake 0.28s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: rotateY(180deg) translateX(0); }
+      25% { transform: rotateY(180deg) translateX(-4px); }
+      75% { transform: rotateY(180deg) translateX(4px); }
+    }
+
+    .message {
+      min-height: 28px;
+      margin-top: 14px;
+      color: #4ade80;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .rules {
+      margin-top: 16px;
+      padding: 16px 18px;
+      border-radius: 14px;
+      background: #1e293b;
+      color: #cbd5e1;
+      line-height: 1.85;
+    }
+
+    .rules strong {
+      color: white;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      border-radius: 18px;
+      background: rgba(15, 23, 42, 0.82);
+      backdrop-filter: blur(5px);
+      z-index: 10;
+    }
+
+    .overlay.show {
+      display: flex;
+    }
+
+    .overlay-card {
+      width: min(320px, 92%);
+      padding: 24px;
+      border-radius: 16px;
+      background: #0f172a;
+      text-align: center;
+    }
+
+    .overlay-card h2 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    .overlay-card p {
+      margin: 0 0 16px;
+      color: #cbd5e1;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 700px) {
+      .container {
+        width: 96%;
+        padding-top: 72px;
+      }
+
+      .home-button {
+        top: 12px;
+        left: 12px;
+        padding: 9px 13px;
+        font-size: 14px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      .description {
+        font-size: 13px;
+        margin-bottom: 14px;
+      }
+
+      button,
+      select,
+      .upload-label {
+        padding: 9px 11px;
+        font-size: 14px;
+      }
+
+      .info-bar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+      }
+
+      .info-item {
+        padding: 8px 4px;
+        font-size: 12px;
+      }
+
+      .info-value {
+        font-size: 16px;
+      }
+
+      .upload-panel {
+        padding: 12px;
+        font-size: 13px;
+      }
+
+      .game-panel {
+        padding: 8px;
+      }
+
+      .board {
+        gap: 7px;
+      }
+
+      .board.cols-6 {
+        gap: 5px;
+      }
+
+      .card-face {
+        border-radius: 9px;
+      }
+
+      .rules {
+        padding: 13px;
+        font-size: 13px;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .board.cols-5,
+      .board.cols-6 {
+        gap: 4px;
+      }
+
+      .card-face {
+        border-radius: 7px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .card-inner {
+        transition: none;
+      }
+
+      .card.shake .card-inner {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <a class="home-button" href="../">
+    ← 回到首頁
+  </a>
+
+  <main class="container">
+
+    <h1>Memory Match｜記憶翻牌</h1>
+
+    <div class="description">
+      翻開兩張卡片找出相同配對，也可以使用自己的圖片遊玩。
+    </div>
+
+    <div class="toolbar">
+      <select id="difficultySelect" aria-label="選擇難度">
+        <option value="easy" selected>簡單｜4 × 4</option>
+        <option value="normal">普通｜4 × 5</option>
+        <option value="hard">困難｜6 × 6</option>
+      </select>
+
+      <button id="emojiModeButton" type="button">
+        預設圖案
+      </button>
+
+      <label class="upload-label" for="imageUpload">
+        上傳自己的圖片
+      </label>
+
+      <input
+        id="imageUpload"
+        type="file"
+        accept="image/*"
+        multiple
+      >
+
+      <button id="restartButton" class="primary" type="button">
+        重新開始
+      </button>
+    </div>
+
+    <div class="info-bar">
+      <div class="info-item">
+        模式
+        <span id="modeText" class="info-value">預設圖案</span>
+      </div>
+
+      <div class="info-item">
+        步數
+        <span id="moveCount" class="info-value">0</span>
+      </div>
+
+      <div class="info-item">
+        配對
+        <span id="matchCount" class="info-value">0 / 8</span>
+      </div>
+
+      <div class="info-item">
+        時間
+        <span id="timer" class="info-value">00:00</span>
+      </div>
+    </div>
+
+    <section id="uploadPanel" class="upload-panel">
+      <div class="upload-summary">
+        <div class="upload-status">
+          自訂圖片：<strong id="imageCountText">尚未上傳</strong>
+          <br>
+          可一次選取多張圖片，至少 2 張、最多 18 張。
+        </div>
+
+        <button id="clearImagesButton" class="danger" type="button">
+          清除自訂圖片
+        </button>
+      </div>
+
+      <div id="thumbs" class="thumbs"></div>
+    </section>
+
+    <section class="game-panel">
+
+      <div id="board" class="board cols-4"></div>
+
+      <div id="overlay" class="overlay" aria-live="polite">
+        <div class="overlay-card">
+          <h2>全部配對完成！</h2>
+          <p id="overlayText"></p>
+          <button id="overlayRestartButton" class="primary" type="button">
+            再玩一次
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <div id="message" class="message" aria-live="polite"></div>
+
+    <div class="rules">
+      <strong>遊戲規則：</strong>
+      每次翻開兩張卡片。
+      <br>
+      如果圖案相同，卡片會保持翻開；不同則會自動蓋回去。
+      <br>
+      將所有卡片配對完成即可過關。
+      <br>
+      自訂圖片模式會將你選擇的圖片自動複製成兩張並洗牌。
+      <br>
+      上傳圖片只會在你的瀏覽器本機使用，不會上傳到網站伺服器。
+    </div>
+
+  </main>
+
+  <script>
+    const difficultySelect = document.getElementById("difficultySelect");
+    const emojiModeButton = document.getElementById("emojiModeButton");
+    const imageUpload = document.getElementById("imageUpload");
+    const restartButton = document.getElementById("restartButton");
+    const clearImagesButton = document.getElementById("clearImagesButton");
+    const boardElement = document.getElementById("board");
+    const modeText = document.getElementById("modeText");
+    const moveCountElement = document.getElementById("moveCount");
+    const matchCountElement = document.getElementById("matchCount");
+    const timerElement = document.getElementById("timer");
+    const imageCountText = document.getElementById("imageCountText");
+    const thumbsElement = document.getElementById("thumbs");
+    const messageElement = document.getElementById("message");
+    const overlay = document.getElementById("overlay");
+    const overlayText = document.getElementById("overlayText");
+    const overlayRestartButton = document.getElementById("overlayRestartButton");
+
+    const DEFAULT_EMOJIS = [
+      "🍎", "🍋", "🍇", "🍉", "🍓", "🍑",
+      "🐱", "🐶", "🐰", "🐼", "🦊", "🐸",
+      "⭐", "🌙", "☀️", "❄️", "🌈", "🔥"
+    ];
+
+    const DIFFICULTIES = {
+      easy: {
+        cols: 4,
+        pairs: 8
+      },
+      normal: {
+        cols: 5,
+        pairs: 10
+      },
+      hard: {
+        cols: 6,
+        pairs: 18
+      }
+    };
+
+    let customImages = [];
+    let mode = "emoji";
+    let cards = [];
+    let firstCard = null;
+    let secondCard = null;
+    let boardLocked = false;
+    let moveCount = 0;
+    let matchedPairs = 0;
+    let totalPairs = 8;
+    let startTime = null;
+    let timerInterval = null;
+    let gameStarted = false;
+    let gameCompleted = false;
+
+    function shuffle(array) {
+      const copy = [...array];
+
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+
+      return copy;
+    }
+
+    function getDifficulty() {
+      return DIFFICULTIES[difficultySelect.value] || DIFFICULTIES.easy;
+    }
+
+    function getPairSources() {
+      if (mode === "custom") {
+        return customImages.map((src, index) => ({
+          id: `image-${index}`,
+          type: "image",
+          value: src
+        }));
+      }
+
+      return DEFAULT_EMOJIS.map((emoji, index) => ({
+        id: `emoji-${index}`,
+        type: "emoji",
+        value: emoji
+      }));
+    }
+
+    function createDeck() {
+      const difficulty = getDifficulty();
+      const availableSources = getPairSources();
+
+      let pairCount = difficulty.pairs;
+
+      if (mode === "custom") {
+        pairCount = Math.min(customImages.length, 18);
+      }
+
+      if (mode === "custom" && pairCount < 2) {
+        return [];
+      }
+
+      totalPairs = pairCount;
+
+      const selected = shuffle(availableSources).slice(0, pairCount);
+
+      const deck = [];
+
+      selected.forEach(source => {
+        deck.push({
+          pairId: source.id,
+          type: source.type,
+          value: source.value,
+          uniqueId: `${source.id}-a`
+        });
+
+        deck.push({
+          pairId: source.id,
+          type: source.type,
+          value: source.value,
+          uniqueId: `${source.id}-b`
+        });
+      });
+
+      return shuffle(deck);
+    }
+
+    function chooseBoardColumns(cardCount) {
+      if (mode === "custom") {
+        if (cardCount <= 16) return 4;
+        if (cardCount <= 24) return 5;
+        return 6;
+      }
+
+      return getDifficulty().cols;
+    }
+
+    function renderBoard() {
+      boardElement.innerHTML = "";
+
+      const cols = chooseBoardColumns(cards.length);
+
+      boardElement.className = `board cols-${cols}`;
+
+      cards.forEach((cardData, index) => {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "card";
+        card.dataset.index = index;
+        card.dataset.pairId = cardData.pairId;
+        card.setAttribute("aria-label", `第 ${index + 1} 張卡片`);
+
+        const inner = document.createElement("span");
+        inner.className = "card-inner";
+
+        const back = document.createElement("span");
+        back.className = "card-face card-back";
+
+        const front = document.createElement("span");
+        front.className = "card-face card-front";
+
+        if (cardData.type === "image") {
+          const img = document.createElement("img");
+          img.src = cardData.value;
+          img.alt = "";
+          front.appendChild(img);
+        } else {
+          front.textContent = cardData.value;
+        }
+
+        inner.appendChild(back);
+        inner.appendChild(front);
+        card.appendChild(inner);
+
+        card.addEventListener("click", () => {
+          handleCardClick(card, cardData);
+        });
+
+        boardElement.appendChild(card);
+      });
+    }
+
+    function handleCardClick(cardElement, cardData) {
+      if (boardLocked || gameCompleted) return;
+      if (cardElement.classList.contains("flipped")) return;
+      if (cardElement.classList.contains("matched")) return;
+
+      if (!gameStarted) {
+        startTimer();
+      }
+
+      cardElement.classList.add("flipped");
+
+      const selected = {
+        element: cardElement,
+        data: cardData
+      };
+
+      if (!firstCard) {
+        firstCard = selected;
+        return;
+      }
+
+      secondCard = selected;
+      moveCount++;
+      updateInfo();
+
+      if (firstCard.data.pairId === secondCard.data.pairId) {
+        firstCard.element.classList.add("matched");
+        secondCard.element.classList.add("matched");
+
+        matchedPairs++;
+        updateInfo();
+
+        firstCard = null;
+        secondCard = null;
+
+        if (matchedPairs >= totalPairs) {
+          finishGame();
+        }
+
+        return;
+      }
+
+      boardLocked = true;
+
+      firstCard.element.classList.add("shake");
+      secondCard.element.classList.add("shake");
+
+      setTimeout(() => {
+        firstCard.element.classList.remove("flipped", "shake");
+        secondCard.element.classList.remove("flipped", "shake");
+
+        firstCard = null;
+        secondCard = null;
+        boardLocked = false;
+      }, 780);
+    }
+
+    function startTimer() {
+      if (gameStarted) return;
+
+      gameStarted = true;
+      startTime = Date.now();
+
+      timerInterval = setInterval(updateTimer, 250);
+      updateTimer();
+    }
+
+    function updateTimer() {
+      if (!startTime) return;
+
+      const totalSeconds = Math.floor((Date.now() - startTime) / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+
+      timerElement.textContent =
+        String(minutes).padStart(2, "0") +
+        ":" +
+        String(seconds).padStart(2, "0");
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+    function resetTimer() {
+      stopTimer();
+      gameStarted = false;
+      startTime = null;
+      timerElement.textContent = "00:00";
+    }
+
+    function getElapsedText() {
+      if (!startTime) return "00:00";
+
+      const totalSeconds = Math.floor((Date.now() - startTime) / 1000);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+
+      return (
+        String(minutes).padStart(2, "0") +
+        ":" +
+        String(seconds).padStart(2, "0")
+      );
+    }
+
+    function updateInfo() {
+      modeText.textContent =
+        mode === "custom"
+          ? "自訂圖片"
+          : "預設圖案";
+
+      moveCountElement.textContent = moveCount;
+
+      matchCountElement.textContent =
+        `${matchedPairs} / ${totalPairs}`;
+    }
+
+    function finishGame() {
+      gameCompleted = true;
+
+      const elapsed = getElapsedText();
+
+      stopTimer();
+
+      overlayText.textContent =
+        `共使用 ${moveCount} 步，完成時間 ${elapsed}。`;
+
+      overlay.classList.add("show");
+
+      messageElement.textContent =
+        "全部配對完成！";
+    }
+
+    function hideOverlay() {
+      overlay.classList.remove("show");
+    }
+
+    function newGame() {
+      if (mode === "custom" && customImages.length < 2) {
+        messageElement.textContent =
+          "自訂圖片模式至少需要 2 張不同圖片。";
+
+        return;
+      }
+
+      firstCard = null;
+      secondCard = null;
+      boardLocked = false;
+      moveCount = 0;
+      matchedPairs = 0;
+      gameCompleted = false;
+
+      resetTimer();
+      hideOverlay();
+
+      cards = createDeck();
+
+      renderBoard();
+      updateInfo();
+
+      messageElement.textContent = "";
+    }
+
+    function switchToEmojiMode() {
+      mode = "emoji";
+      difficultySelect.disabled = false;
+      newGame();
+    }
+
+    function updateImagePanel() {
+      thumbsElement.innerHTML = "";
+
+      if (customImages.length === 0) {
+        imageCountText.textContent = "尚未上傳";
+        return;
+      }
+
+      imageCountText.textContent =
+        `已選擇 ${customImages.length} 張`;
+
+      customImages.forEach((src, index) => {
+        const thumb = document.createElement("div");
+        thumb.className = "thumb";
+
+        const img = document.createElement("img");
+        img.src = src;
+        img.alt = "";
+
+        const number = document.createElement("div");
+        number.className = "thumb-number";
+        number.textContent = index + 1;
+
+        thumb.appendChild(img);
+        thumb.appendChild(number);
+        thumbsElement.appendChild(thumb);
+      });
+    }
+
+    function fileToDataURL(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = () => {
+          resolve(reader.result);
+        };
+
+        reader.onerror = () => {
+          reject(new Error("圖片讀取失敗"));
+        };
+
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleImageUpload(event) {
+      const files = Array.from(event.target.files || [])
+        .filter(file => file.type.startsWith("image/"))
+        .slice(0, 18);
+
+      if (files.length === 0) {
+        return;
+      }
+
+      messageElement.textContent =
+        "正在讀取圖片...";
+
+      try {
+        const results = await Promise.all(
+          files.map(fileToDataURL)
+        );
+
+        customImages = results;
+
+        updateImagePanel();
+
+        if (customImages.length < 2) {
+          messageElement.textContent =
+            "至少需要 2 張不同圖片才能開始遊戲。";
+
+          return;
+        }
+
+        mode = "custom";
+        difficultySelect.disabled = true;
+
+        newGame();
+
+        messageElement.textContent =
+          `已切換為自訂圖片模式，共 ${customImages.length} 組配對。`;
+      } catch (error) {
+        messageElement.textContent =
+          "讀取圖片失敗，請重新選擇。";
+      }
+
+      imageUpload.value = "";
+    }
+
+    function clearCustomImages() {
+      customImages = [];
+      updateImagePanel();
+
+      mode = "emoji";
+      difficultySelect.disabled = false;
+
+      messageElement.textContent =
+        "已清除自訂圖片，恢復預設圖案。";
+
+      newGame();
+    }
+
+    difficultySelect.addEventListener("change", () => {
+      if (mode === "emoji") {
+        newGame();
+      }
+    });
+
+    emojiModeButton.addEventListener(
+      "click",
+      switchToEmojiMode
+    );
+
+    imageUpload.addEventListener(
+      "change",
+      handleImageUpload
+    );
+
+    restartButton.addEventListener(
+      "click",
+      newGame
+    );
+
+    overlayRestartButton.addEventListener(
+      "click",
+      newGame
+    );
+
+    clearImagesButton.addEventListener(
+      "click",
+      clearCustomImages
+    );
+
+    updateImagePanel();
+    newGame();
+  </script>
+
+</body>
+</html>
