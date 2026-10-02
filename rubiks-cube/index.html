@@ -16,12 +16,7 @@
     content="3D 3×3 魔術方塊益智遊戲。"
   >
 
-  <!--
-    Three.js
-
-    不需要下載任何檔案，
-    GitHub Pages 開啟時會直接載入。
-  -->
+  <!-- Three.js -->
   <script type="importmap">
   {
     "imports": {
@@ -130,12 +125,12 @@
 
       font-size: 15px;
 
-      line-height: 1.6;
+      line-height: 1.7;
     }
 
 
     /* ================================
-       上方工具
+       上方按鈕
     ================================= */
 
     .toolbar {
@@ -242,7 +237,7 @@
 
 
     /* ================================
-       3D 區
+       3D 區域
     ================================= */
 
     .cube-panel {
@@ -268,16 +263,13 @@
 
       width: 100%;
 
-      height: 520px;
+      height: 540px;
 
       touch-action: none;
 
-      cursor: grab;
-    }
+      user-select: none;
 
-
-    #cube-container:active {
-      cursor: grabbing;
+      -webkit-user-select: none;
     }
 
 
@@ -287,112 +279,56 @@
       width: 100%;
 
       height: 100%;
+
+      touch-action: none;
     }
 
 
-    .view-hint {
+    /* ================================
+       操作提示
+    ================================= */
+
+    .gesture-help {
       position: absolute;
 
       left: 50%;
-      bottom: 12px;
+      bottom: 14px;
 
       transform: translateX(-50%);
 
-      padding: 7px 12px;
+      display: flex;
 
-      border-radius: 20px;
+      gap: 8px;
 
-      background:
-        rgba(15, 23, 42, 0.72);
+      align-items: center;
 
-      color: #cbd5e1;
+      justify-content: center;
 
-      font-size: 13px;
+      flex-wrap: wrap;
 
-      white-space: nowrap;
+      width: max-content;
+
+      max-width: calc(100% - 20px);
 
       pointer-events: none;
     }
 
 
-    /* ================================
-       旋轉操作
-    ================================= */
+    .gesture-chip {
+      padding: 7px 11px;
 
-    .controls-panel {
-      margin-top: 16px;
+      border-radius: 20px;
 
-      padding: 16px;
-
-      border-radius: 16px;
-
-      background: #1e293b;
-    }
-
-
-    .controls-title {
-      margin-bottom: 12px;
+      background:
+        rgba(15, 23, 42, 0.78);
 
       color: #cbd5e1;
 
-      text-align: center;
+      font-size: 12px;
 
-      font-weight: bold;
-    }
+      white-space: nowrap;
 
-
-    .move-grid {
-      display: grid;
-
-      grid-template-columns:
-        repeat(6, minmax(0, 1fr));
-
-      gap: 8px;
-    }
-
-
-    .move-group {
-      min-width: 0;
-
-      padding: 8px;
-
-      border-radius: 12px;
-
-      background: #0f172a;
-    }
-
-
-    .move-label {
-      margin-bottom: 7px;
-
-      color: #94a3b8;
-
-      text-align: center;
-
-      font-size: 13px;
-
-      font-weight: bold;
-    }
-
-
-    .move-buttons {
-      display: grid;
-
-      grid-template-columns:
-        repeat(2, minmax(0, 1fr));
-
-      gap: 5px;
-    }
-
-
-    .move-buttons button {
-      min-width: 0;
-
-      padding: 10px 4px;
-
-      font-size: 16px;
-
-      font-weight: bold;
+      backdrop-filter: blur(5px);
     }
 
 
@@ -407,7 +343,7 @@
 
       border-radius: 12px;
 
-      background: #0f172a;
+      background: #1e293b;
 
       color: #cbd5e1;
 
@@ -465,7 +401,7 @@
 
       color: #cbd5e1;
 
-      line-height: 1.8;
+      line-height: 1.9;
     }
 
 
@@ -475,7 +411,7 @@
 
 
     /* ================================
-       手機
+       手機版
     ================================= */
 
     @media (max-width: 700px) {
@@ -503,9 +439,9 @@
 
 
       .description {
-        font-size: 13px;
-
         margin-bottom: 14px;
+
+        font-size: 13px;
       }
 
 
@@ -534,41 +470,21 @@
 
 
       #cube-container {
-        height: 390px;
+        height: 430px;
       }
 
 
-      .view-hint {
-        bottom: 8px;
+      .gesture-help {
+        bottom: 9px;
 
-        padding: 6px 10px;
+        gap: 5px;
+      }
+
+
+      .gesture-chip {
+        padding: 6px 9px;
 
         font-size: 11px;
-      }
-
-
-      .controls-panel {
-        padding: 10px;
-      }
-
-
-      .move-grid {
-        grid-template-columns:
-          repeat(3, minmax(0, 1fr));
-
-        gap: 7px;
-      }
-
-
-      .move-group {
-        padding: 7px;
-      }
-
-
-      .move-buttons button {
-        min-height: 42px;
-
-        padding: 7px 2px;
       }
 
 
@@ -589,7 +505,7 @@
     @media (max-width: 400px) {
 
       #cube-container {
-        height: 350px;
+        height: 390px;
       }
 
     }
@@ -619,12 +535,12 @@
 
 
     <div class="description">
-      旋轉 3×3 魔術方塊，讓六個面恢復成各自相同的顏色。
+      直接拖曳魔方旋轉各層，將六個面恢復成各自相同的顏色。
     </div>
 
 
     <!-- ================================
-         工具
+         上方功能
     ================================= -->
 
     <div class="toolbar">
@@ -663,50 +579,67 @@
     <div class="info-bar">
 
       <div class="info-item">
+
         步數：
+
         <span
           id="moveCount"
           class="info-value"
         >
           0
         </span>
+
       </div>
 
 
       <div class="info-item">
+
         時間：
+
         <span
           id="timer"
           class="info-value"
         >
           00:00
         </span>
+
       </div>
 
 
       <div class="info-item">
+
         狀態：
+
         <span
           id="statusText"
           class="info-value"
         >
           準備
         </span>
+
       </div>
 
     </div>
 
 
     <!-- ================================
-         3D 魔術方塊
+         魔術方塊
     ================================= -->
 
     <div class="cube-panel">
 
       <div id="cube-container">
 
-        <div class="view-hint">
-          拖曳旋轉視角
+        <div class="gesture-help">
+
+          <div class="gesture-chip">
+            魔方上拖曳：旋轉該層
+          </div>
+
+          <div class="gesture-chip">
+            空白處拖曳：旋轉視角
+          </div>
+
         </div>
 
       </div>
@@ -715,225 +648,18 @@
 
 
     <!-- ================================
-         旋轉控制
+         打亂公式
     ================================= -->
 
-    <div class="controls-panel">
-
-      <div class="controls-title">
-        旋轉方塊
-      </div>
-
-
-      <div class="move-grid">
-
-
-        <!-- U -->
-
-        <div class="move-group">
-
-          <div class="move-label">
-            U｜上
-          </div>
-
-          <div class="move-buttons">
-
-            <button
-              type="button"
-              class="move-button"
-              data-move="U"
-            >
-              U
-            </button>
-
-            <button
-              type="button"
-              class="move-button"
-              data-move="U"
-              data-prime="true"
-            >
-              U′
-            </button>
-
-          </div>
-
-        </div>
-
-
-        <!-- D -->
-
-        <div class="move-group">
-
-          <div class="move-label">
-            D｜下
-          </div>
-
-          <div class="move-buttons">
-
-            <button
-              type="button"
-              class="move-button"
-              data-move="D"
-            >
-              D
-            </button>
-
-            <button
-              type="button"
-              class="move-button"
-              data-move="D"
-              data-prime="true"
-            >
-              D′
-            </button>
-
-          </div>
-
-        </div>
-
-
-        <!-- L -->
-
-        <div class="move-group">
-
-          <div class="move-label">
-            L｜左
-          </div>
-
-          <div class="move-buttons">
-
-            <button
-              type="button"
-              class="move-button"
-              data-move="L"
-            >
-              L
-            </button>
-
-            <button
-              type="button"
-              class="move-button"
-              data-move="L"
-              data-prime="true"
-            >
-              L′
-            </button>
-
-          </div>
-
-        </div>
-
-
-        <!-- R -->
-
-        <div class="move-group">
-
-          <div class="move-label">
-            R｜右
-          </div>
-
-          <div class="move-buttons">
-
-            <button
-              type="button"
-              class="move-button"
-              data-move="R"
-            >
-              R
-            </button>
-
-            <button
-              type="button"
-              class="move-button"
-              data-move="R"
-              data-prime="true"
-            >
-              R′
-            </button>
-
-          </div>
-
-        </div>
-
-
-        <!-- F -->
-
-        <div class="move-group">
-
-          <div class="move-label">
-            F｜前
-          </div>
-
-          <div class="move-buttons">
-
-            <button
-              type="button"
-              class="move-button"
-              data-move="F"
-            >
-              F
-            </button>
-
-            <button
-              type="button"
-              class="move-button"
-              data-move="F"
-              data-prime="true"
-            >
-              F′
-            </button>
-
-          </div>
-
-        </div>
-
-
-        <!-- B -->
-
-        <div class="move-group">
-
-          <div class="move-label">
-            B｜後
-          </div>
-
-          <div class="move-buttons">
-
-            <button
-              type="button"
-              class="move-button"
-              data-move="B"
-            >
-              B
-            </button>
-
-            <button
-              type="button"
-              class="move-button"
-              data-move="B"
-              data-prime="true"
-            >
-              B′
-            </button>
-
-          </div>
-
-        </div>
-
-
-      </div>
-
-
-      <div class="scramble-box">
-
-        <span class="scramble-title">
-          打亂公式：
-        </span>
-
-        <span id="scrambleText">
-          -
-        </span>
-
-      </div>
+    <div class="scramble-box">
+
+      <span class="scramble-title">
+        打亂公式：
+      </span>
+
+      <span id="scrambleText">
+        -
+      </span>
 
     </div>
 
@@ -955,22 +681,22 @@
 
       <br>
 
-      U、D、L、R、F、B
-      分別代表上、下、左、右、前、後。
+      在魔方表面按住並拖曳，
+      即可旋轉對應的橫列或直欄。
 
       <br>
 
-      字母代表該面順時針旋轉 90°，
-      「′」代表逆時針旋轉 90°。
+      在魔方外的空白區域拖曳，
+      可以自由旋轉觀看整顆魔方。
 
       <br>
 
-      每次旋轉算 1 步。
+      可自由從任何角度觀看魔方，
+      改變視角不計入步數。
 
       <br>
 
-      可直接拖曳 3D 畫面改變觀察角度，
-      拖動畫面不計入步數。
+      每次實際旋轉一層算 1 步。
 
     </div>
 
@@ -992,7 +718,7 @@
 
 
     /* ==================================================
-       HTML 元素
+       HTML
     ================================================== */
 
     const container =
@@ -1049,17 +775,9 @@
       );
 
 
-    const moveButtons =
-      Array.from(
-        document.querySelectorAll(
-          ".move-button"
-        )
-      );
-
-
 
     /* ==================================================
-       Three.js 基本設定
+       Three.js
     ================================================== */
 
     const scene =
@@ -1130,12 +848,20 @@
       false;
 
 
+    /*
+      不設定 minPolarAngle /
+      maxPolarAngle。
+
+      因此視角可以自由上下翻轉。
+    */
+
+
     controls.minDistance =
-      5.5;
+      5.2;
 
 
     controls.maxDistance =
-      13;
+      14;
 
 
     controls.target.set(
@@ -1153,15 +879,13 @@
        燈光
     ================================================== */
 
-    const ambientLight =
+    scene.add(
+
       new THREE.AmbientLight(
         0xffffff,
-        1.9
-      );
+        2
+      )
 
-
-    scene.add(
-      ambientLight
     );
 
 
@@ -1187,13 +911,13 @@
     const fillLight =
       new THREE.DirectionalLight(
         0xffffff,
-        1.3
+        1.2
       );
 
 
     fillLight.position.set(
       -6,
-      -2,
+      -3,
       -5
     );
 
@@ -1205,7 +929,7 @@
 
 
     /* ==================================================
-       方塊設定
+       魔方
     ================================================== */
 
     const cubeRoot =
@@ -1220,9 +944,13 @@
     const cubies = [];
 
 
-    const SPACING = 1.03;
+    const SPACING =
+      1.03;
 
-    const CUBIE_SIZE = 0.94;
+
+    const CUBIE_SIZE =
+      0.94;
+
 
 
     const COLOR = {
@@ -1253,7 +981,7 @@
 
 
     /* ==================================================
-       建立材質
+       材質
     ================================================== */
 
     function createMaterial(
@@ -1281,14 +1009,14 @@
     ) {
 
       /*
-        BoxGeometry material 順序：
+        BoxGeometry 材質順序：
 
-        0 +X 右
-        1 -X 左
-        2 +Y 上
-        3 -Y 下
-        4 +Z 前
-        5 -Z 後
+        +X = 右
+        -X = 左
+        +Y = 上
+        -Y = 下
+        +Z = 前
+        -Z = 後
       */
 
       return [
@@ -1336,20 +1064,25 @@
 
 
     /* ==================================================
-       建立 27 個小方塊
+       建立 27 顆方塊
     ================================================== */
 
     function createCube3D() {
 
-      cubies.length = 0;
+      cubies.length =
+        0;
 
 
       while (
         cubeRoot.children.length
       ) {
 
+        const object =
+          cubeRoot.children[0];
+
+
         cubeRoot.remove(
-          cubeRoot.children[0]
+          object
         );
 
       }
@@ -1407,15 +1140,13 @@
 
 
             cubie.userData.coord = {
+
               x,
               y,
               z
+
             };
 
-
-            /*
-              黑色邊框
-            */
 
             const edges =
               new THREE.LineSegments(
@@ -1456,12 +1187,11 @@
 
 
     /* ==================================================
-       邏輯用貼紙
-
-       用來判斷是否完成。
+       貼紙邏輯
     ================================================== */
 
     let stickers = [];
+
 
 
     function createSolvedStickerState() {
@@ -1469,9 +1199,7 @@
       stickers = [];
 
 
-      /*
-        上面
-      */
+      /* U */
 
       for (
         let x = -1;
@@ -1504,9 +1232,7 @@
       }
 
 
-      /*
-        下面
-      */
+      /* D */
 
       for (
         let x = -1;
@@ -1539,9 +1265,7 @@
       }
 
 
-      /*
-        前面
-      */
+      /* F */
 
       for (
         let x = -1;
@@ -1574,9 +1298,7 @@
       }
 
 
-      /*
-        後面
-      */
+      /* B */
 
       for (
         let x = -1;
@@ -1609,9 +1331,7 @@
       }
 
 
-      /*
-        左面
-      */
+      /* L */
 
       for (
         let y = -1;
@@ -1644,9 +1364,7 @@
       }
 
 
-      /*
-        右面
-      */
+      /* R */
 
       for (
         let y = -1;
@@ -1683,7 +1401,7 @@
 
 
     /* ==================================================
-       向量旋轉
+       旋轉向量
     ================================================== */
 
     function rotateVector(
@@ -1703,26 +1421,18 @@
         ) {
 
           return {
-
             x,
-
             y: -z,
-
             z: y
-
           };
 
         }
 
 
         return {
-
           x,
-
           y: z,
-
           z: -y
-
         };
 
       }
@@ -1737,26 +1447,18 @@
         ) {
 
           return {
-
             x: z,
-
             y,
-
             z: -x
-
           };
 
         }
 
 
         return {
-
           x: -z,
-
           y,
-
           z: x
-
         };
 
       }
@@ -1771,26 +1473,18 @@
         ) {
 
           return {
-
             x: -y,
-
             y: x,
-
             z
-
           };
 
         }
 
 
         return {
-
           x: y,
-
           y: -x,
-
           z
-
         };
 
       }
@@ -1800,148 +1494,25 @@
 
 
     /* ==================================================
-       各旋轉設定
+       更新邏輯狀態
 
-       direction 為從世界座標軸方向
-       旋轉 ±90 度
+       axis = x / y / z
+       layer = -1 / 0 / 1
+       direction = +1 / -1
     ================================================== */
 
-    const moveSettings = {
-
-      U: {
-
-        axis: "y",
-
-        layer: 1,
-
-        direction: -1
-
-      },
-
-
-      D: {
-
-        axis: "y",
-
-        layer: -1,
-
-        direction: 1
-
-      },
-
-
-      L: {
-
-        axis: "x",
-
-        layer: -1,
-
-        direction: 1
-
-      },
-
-
-      R: {
-
-        axis: "x",
-
-        layer: 1,
-
-        direction: -1
-
-      },
-
-
-      F: {
-
-        axis: "z",
-
-        layer: 1,
-
-        direction: -1
-
-      },
-
-
-      B: {
-
-        axis: "z",
-
-        layer: -1,
-
-        direction: 1
-
-      }
-
-    };
-
-
-
-    /* ==================================================
-       更新邏輯貼紙
-    ================================================== */
-
-    function applyStickerMove(
-      face,
-      prime = false
+    function applySliceToStickers(
+      axis,
+      layer,
+      direction
     ) {
-
-      const setting =
-        moveSettings[
-          face
-        ];
-
-
-      let direction =
-        setting.direction;
-
-
-      if (
-        prime
-      ) {
-
-        direction *= -1;
-
-      }
-
 
       stickers.forEach(
         sticker => {
 
-          let coordinate;
-
-
           if (
-            setting.axis === "x"
-          ) {
-
-            coordinate =
-              sticker.x;
-
-          }
-
-
-          else if (
-            setting.axis === "y"
-          ) {
-
-            coordinate =
-              sticker.y;
-
-          }
-
-
-          else {
-
-            coordinate =
-              sticker.z;
-
-          }
-
-
-          if (
-            coordinate !==
-            setting.layer
+            sticker[axis] !==
+            layer
           ) {
 
             return;
@@ -1956,8 +1527,7 @@
               sticker.y,
               sticker.z,
 
-              setting.axis,
-
+              axis,
               direction
 
             );
@@ -1980,8 +1550,7 @@
               sticker.ny,
               sticker.nz,
 
-              setting.axis,
-
+              axis,
               direction
 
             );
@@ -2004,7 +1573,7 @@
 
 
     /* ==================================================
-       取得貼紙面
+       判斷完成
     ================================================== */
 
     function getStickerFace(
@@ -2062,10 +1631,6 @@
 
 
 
-    /* ==================================================
-       是否完成
-    ================================================== */
-
     function isSolved() {
 
       const faces = [
@@ -2091,7 +1656,8 @@
 
 
           if (
-            faceStickers.length !== 9
+            faceStickers.length !==
+            9
           ) {
 
             return false;
@@ -2099,14 +1665,14 @@
           }
 
 
-          const firstColor =
+          const color =
             faceStickers[0].color;
 
 
           return faceStickers.every(
             sticker =>
               sticker.color ===
-              firstColor
+              color
           );
 
         }
@@ -2117,7 +1683,7 @@
 
 
     /* ==================================================
-       3D 旋轉工具
+       旋轉 3D 某一層
     ================================================== */
 
     let isAnimating =
@@ -2125,69 +1691,26 @@
 
 
     const TURN_DURATION =
-      230;
+      220;
 
 
-
-    function getCubieCoordinate(
-      cubie,
-      axis
-    ) {
-
-      return cubie
-        .userData
-        .coord[
-          axis
-        ];
-
-    }
-
-
-
-    /* ==================================================
-       旋轉一層
-    ================================================== */
 
     function rotateLayer3D(
-      face,
-      prime = false,
+      axis,
+      layer,
+      direction,
       animated = true
     ) {
 
       return new Promise(
         resolve => {
 
-          const setting =
-            moveSettings[
-              face
-            ];
-
-
-          let direction =
-            setting.direction;
-
-
-          if (
-            prime
-          ) {
-
-            direction *= -1;
-
-          }
-
-
           const selected =
             cubies.filter(
               cubie =>
-
-                getCubieCoordinate(
-                  cubie,
-                  setting.axis
-                )
-
-                ===
-
-                setting.layer
+                cubie.userData.coord[
+                  axis
+                ] === layer
             );
 
 
@@ -2199,10 +1722,6 @@
             turnGroup
           );
 
-
-          /*
-            將該層 9 顆方塊放進臨時群組。
-          */
 
           selected.forEach(
             cubie => {
@@ -2224,12 +1743,8 @@
           const finish =
             () => {
 
-              /*
-                將群組固定在精確 90 度。
-              */
-
               turnGroup.rotation[
-                setting.axis
+                axis
               ] =
                 targetAngle;
 
@@ -2239,10 +1754,6 @@
               );
 
 
-              /*
-                把小方塊放回 cubeRoot。
-              */
-
               selected.forEach(
                 cubie => {
 
@@ -2250,10 +1761,6 @@
                     cubie
                   );
 
-
-                  /*
-                    更新整數座標。
-                  */
 
                   const old =
                     cubie.userData.coord;
@@ -2266,8 +1773,7 @@
                       old.y,
                       old.z,
 
-                      setting.axis,
-
+                      axis,
                       direction
 
                     );
@@ -2293,33 +1799,26 @@
                   };
 
 
-                  /*
-                    清掉浮點誤差，
-                    讓每顆小方塊回到固定格線。
-                  */
-
                   cubie.position.set(
 
-                    cubie
-                      .userData
-                      .coord
-                      .x
-                      * SPACING,
+                    cubie.userData.coord.x
+                    * SPACING,
 
-                    cubie
-                      .userData
-                      .coord
-                      .y
-                      * SPACING,
+                    cubie.userData.coord.y
+                    * SPACING,
 
-                    cubie
-                      .userData
-                      .coord
-                      .z
-                      * SPACING
+                    cubie.userData.coord.z
+                    * SPACING
 
                   );
 
+
+                  /*
+                    四元數只需正規化。
+
+                    orientation 本身必須保留，
+                    因為貼紙也跟著小方塊旋轉。
+                  */
 
                   cubie.quaternion.normalize();
 
@@ -2337,10 +1836,6 @@
             };
 
 
-          /*
-            打亂時可以不播放動畫。
-          */
-
           if (
             !animated
           ) {
@@ -2352,7 +1847,7 @@
           }
 
 
-          const startTime =
+          const startedAt =
             performance.now();
 
 
@@ -2360,22 +1855,21 @@
             now
           ) {
 
-            const elapsed =
-              now -
-              startTime;
-
-
             const progress =
               Math.min(
-                elapsed /
+
+                (
+                  now -
+                  startedAt
+                )
+
+                /
+
                 TURN_DURATION,
+
                 1
               );
 
-
-            /*
-              easeInOut
-            */
 
             const eased =
 
@@ -2390,17 +1884,19 @@
                 :
 
                 1 -
+
                 Math.pow(
                   -2 *
                   progress +
                   2,
                   2
-                ) /
-                2;
+                )
+
+                / 2;
 
 
             turnGroup.rotation[
-              setting.axis
+              axis
             ] =
               targetAngle *
               eased;
@@ -2471,10 +1967,6 @@
 
 
 
-    /* ==================================================
-       計時
-    ================================================== */
-
     function startTimer() {
 
       if (
@@ -2518,7 +2010,7 @@
       }
 
 
-      const seconds =
+      const totalSeconds =
         Math.floor(
 
           (
@@ -2533,12 +2025,14 @@
 
       const minutes =
         Math.floor(
-          seconds / 60
+          totalSeconds /
+          60
         );
 
 
-      const remainingSeconds =
-        seconds % 60;
+      const seconds =
+        totalSeconds %
+        60;
 
 
       timerElement.textContent =
@@ -2557,7 +2051,7 @@
         +
 
         String(
-          remainingSeconds
+          seconds
         ).padStart(
           2,
           "0"
@@ -2608,41 +2102,13 @@
 
 
     /* ==================================================
-       鎖定按鈕
+       玩家旋轉一層
     ================================================== */
 
-    function setButtonsDisabled(
-      disabled
-    ) {
-
-      moveButtons.forEach(
-        button => {
-
-          button.disabled =
-            disabled;
-
-        }
-      );
-
-
-      scrambleButton.disabled =
-        disabled;
-
-
-      resetButton.disabled =
-        disabled;
-
-    }
-
-
-
-    /* ==================================================
-       玩家操作
-    ================================================== */
-
-    async function playerMove(
-      face,
-      prime
+    async function playerSliceMove(
+      axis,
+      layer,
+      direction
     ) {
 
       if (
@@ -2656,11 +2122,6 @@
 
       isAnimating =
         true;
-
-
-      setButtonsDisabled(
-        true
-      );
 
 
       if (
@@ -2684,23 +2145,17 @@
       startTimer();
 
 
-      /*
-        先更新邏輯狀態。
-      */
-
-      applyStickerMove(
-        face,
-        prime
+      applySliceToStickers(
+        axis,
+        layer,
+        direction
       );
 
 
-      /*
-        播放 3D 旋轉。
-      */
-
       await rotateLayer3D(
-        face,
-        prime,
+        axis,
+        layer,
+        direction,
         true
       );
 
@@ -2731,13 +2186,174 @@
 
       }
 
+      else {
+
+        statusElement.textContent =
+          "遊戲中";
+
+      }
+
 
       isAnimating =
         false;
 
+    }
 
-      setButtonsDisabled(
-        false
+
+
+    /* ==================================================
+       Raycaster
+    ================================================== */
+
+    const raycaster =
+      new THREE.Raycaster();
+
+
+    const pointerNDC =
+      new THREE.Vector2();
+
+
+
+    function updatePointerNDC(
+      event
+    ) {
+
+      const rect =
+        renderer
+          .domElement
+          .getBoundingClientRect();
+
+
+      pointerNDC.x =
+
+        (
+          (
+            event.clientX -
+            rect.left
+          )
+
+          / rect.width
+        )
+
+        * 2
+        - 1;
+
+
+      pointerNDC.y =
+
+        -(
+
+          (
+            event.clientY -
+            rect.top
+          )
+
+          / rect.height
+
+        )
+
+        * 2
+        + 1;
+
+    }
+
+
+
+    function getIntersection(
+      event
+    ) {
+
+      updatePointerNDC(
+        event
+      );
+
+
+      raycaster.setFromCamera(
+        pointerNDC,
+        camera
+      );
+
+
+      const intersections =
+        raycaster.intersectObjects(
+          cubies,
+          false
+        );
+
+
+      if (
+        intersections.length ===
+        0
+      ) {
+
+        return null;
+
+      }
+
+
+      return intersections[0];
+
+    }
+
+
+
+    /* ==================================================
+       將世界向量轉為螢幕向量
+    ================================================== */
+
+    function projectWorldDirection(
+      origin,
+      direction
+    ) {
+
+      const rect =
+        renderer
+          .domElement
+          .getBoundingClientRect();
+
+
+      const p1 =
+        origin
+          .clone()
+          .project(
+            camera
+          );
+
+
+      const p2 =
+        origin
+          .clone()
+          .add(
+            direction
+          )
+          .project(
+            camera
+          );
+
+
+      return new THREE.Vector2(
+
+        (
+          p2.x -
+          p1.x
+        )
+
+        *
+        rect.width
+        / 2,
+
+
+        -(
+
+          p2.y -
+          p1.y
+
+        )
+
+        *
+        rect.height
+        / 2
+
       );
 
     }
@@ -2745,27 +2361,772 @@
 
 
     /* ==================================================
-       產生打亂公式
+       將面法向量吸附到 X/Y/Z 軸
     ================================================== */
+
+    function snapAxisVector(
+      vector
+    ) {
+
+      const absX =
+        Math.abs(
+          vector.x
+        );
+
+
+      const absY =
+        Math.abs(
+          vector.y
+        );
+
+
+      const absZ =
+        Math.abs(
+          vector.z
+        );
+
+
+      if (
+        absX >= absY &&
+        absX >= absZ
+      ) {
+
+        return new THREE.Vector3(
+
+          Math.sign(
+            vector.x
+          ),
+
+          0,
+
+          0
+
+        );
+
+      }
+
+
+      if (
+        absY >= absX &&
+        absY >= absZ
+      ) {
+
+        return new THREE.Vector3(
+
+          0,
+
+          Math.sign(
+            vector.y
+          ),
+
+          0
+
+        );
+
+      }
+
+
+      return new THREE.Vector3(
+
+        0,
+
+        0,
+
+        Math.sign(
+          vector.z
+        )
+
+      );
+
+    }
+
+
+
+    /* ==================================================
+       找出該面的兩個可拖曳方向
+    ================================================== */
+
+    function getTangentAxes(
+      normal
+    ) {
+
+      const axes = [
+
+        new THREE.Vector3(
+          1,
+          0,
+          0
+        ),
+
+        new THREE.Vector3(
+          0,
+          1,
+          0
+        ),
+
+        new THREE.Vector3(
+          0,
+          0,
+          1
+        )
+
+      ];
+
+
+      return axes.filter(
+        axis =>
+
+          Math.abs(
+            axis.dot(
+              normal
+            )
+          )
+
+          < 0.5
+      );
+
+    }
+
+
+
+    /* ==================================================
+       拖曳手勢
+    ================================================== */
+
+    let cubeGesture =
+      null;
+
+
+    const DRAG_THRESHOLD =
+      22;
+
+
+
+    function onPointerDown(
+      event
+    ) {
+
+      /*
+        旋轉動畫中禁止再抓魔方。
+      */
+
+      const hit =
+        getIntersection(
+          event
+        );
+
+
+      /*
+        沒有點到魔方。
+
+        不攔截事件，
+        交給 OrbitControls，
+        因此會旋轉觀看視角。
+      */
+
+      if (
+        !hit
+      ) {
+
+        cubeGesture =
+          null;
+
+        return;
+
+      }
+
+
+      /*
+        點到魔方時，
+        這次手勢由我們自己處理。
+      */
+
+      event.preventDefault();
+
+      event.stopPropagation();
+
+
+      if (
+        isAnimating
+      ) {
+
+        return;
+
+      }
+
+
+      controls.enabled =
+        false;
+
+
+      renderer.domElement.setPointerCapture(
+        event.pointerId
+      );
+
+
+      /*
+        取得碰到的面的法向量。
+      */
+
+      const normalMatrix =
+        new THREE.Matrix3()
+          .getNormalMatrix(
+            hit.object.matrixWorld
+          );
+
+
+      const worldNormal =
+        hit.face.normal
+          .clone()
+          .applyMatrix3(
+            normalMatrix
+          )
+          .normalize();
+
+
+      const snappedNormal =
+        snapAxisVector(
+          worldNormal
+        );
+
+
+      cubeGesture = {
+
+        pointerId:
+          event.pointerId,
+
+        startX:
+          event.clientX,
+
+        startY:
+          event.clientY,
+
+        cubie:
+          hit.object,
+
+        hitPoint:
+          hit.point.clone(),
+
+        normal:
+          snappedNormal,
+
+        triggered:
+          false
+
+      };
+
+    }
+
+
+
+    async function onPointerMove(
+      event
+    ) {
+
+      if (
+        !cubeGesture
+      ) {
+
+        return;
+
+      }
+
+
+      if (
+        event.pointerId !==
+        cubeGesture.pointerId
+      ) {
+
+        return;
+
+      }
+
+
+      event.preventDefault();
+
+      event.stopPropagation();
+
+
+      if (
+        cubeGesture.triggered
+      ) {
+
+        return;
+
+      }
+
+
+      const dx =
+        event.clientX -
+        cubeGesture.startX;
+
+
+      const dy =
+        event.clientY -
+        cubeGesture.startY;
+
+
+      const distance =
+        Math.hypot(
+          dx,
+          dy
+        );
+
+
+      if (
+        distance <
+        DRAG_THRESHOLD
+      ) {
+
+        return;
+
+      }
+
+
+      cubeGesture.triggered =
+        true;
+
+
+      /*
+        使用者在螢幕上的拖曳方向。
+      */
+
+      const screenDrag =
+        new THREE.Vector2(
+          dx,
+          dy
+        )
+          .normalize();
+
+
+      /*
+        找出目前這個面上的
+        兩個世界座標方向。
+      */
+
+      const tangents =
+        getTangentAxes(
+          cubeGesture.normal
+        );
+
+
+      let bestAxis =
+        null;
+
+
+      let bestDot =
+        0;
+
+
+      tangents.forEach(
+        axis => {
+
+          const projected =
+            projectWorldDirection(
+
+              cubeGesture.hitPoint,
+
+              axis
+
+            );
+
+
+          if (
+            projected.lengthSq() <
+            0.0001
+          ) {
+
+            return;
+
+          }
+
+
+          projected.normalize();
+
+
+          const dot =
+            screenDrag.dot(
+              projected
+            );
+
+
+          if (
+            Math.abs(
+              dot
+            )
+            >
+            Math.abs(
+              bestDot
+            )
+          ) {
+
+            bestDot =
+              dot;
+
+
+            bestAxis =
+              axis.clone();
+
+          }
+
+        }
+      );
+
+
+      if (
+        !bestAxis
+      ) {
+
+        endCubeGesture();
+
+        return;
+
+      }
+
+
+      /*
+        如果使用者拖的是反方向，
+        世界方向也反轉。
+      */
+
+      if (
+        bestDot <
+        0
+      ) {
+
+        bestAxis.multiplyScalar(
+          -1
+        );
+
+      }
+
+
+      /*
+        旋轉軸：
+
+        面的法向量 × 拖曳方向
+
+        例如：
+
+        正面向右拖
+        Z × X = Y
+
+        因此會旋轉橫列。
+      */
+
+      const rotationVector =
+        new THREE.Vector3()
+          .crossVectors(
+
+            cubeGesture.normal,
+
+            bestAxis
+
+          );
+
+
+      const snappedRotation =
+        snapAxisVector(
+          rotationVector
+        );
+
+
+      let axis;
+
+      let direction;
+
+
+      if (
+        snappedRotation.x !==
+        0
+      ) {
+
+        axis =
+          "x";
+
+
+        direction =
+          snappedRotation.x;
+
+      }
+
+
+      else if (
+        snappedRotation.y !==
+        0
+      ) {
+
+        axis =
+          "y";
+
+
+        direction =
+          snappedRotation.y;
+
+      }
+
+
+      else {
+
+        axis =
+          "z";
+
+
+        direction =
+          snappedRotation.z;
+
+      }
+
+
+      /*
+        點到哪一顆小方塊，
+        就旋轉它所在的那一層。
+
+        因此中間層也可以拖。
+      */
+
+      const layer =
+        cubeGesture
+          .cubie
+          .userData
+          .coord[
+            axis
+          ];
+
+
+      /*
+        先保存資料，
+        再結束手勢。
+      */
+
+      const move = {
+
+        axis,
+        layer,
+        direction
+
+      };
+
+
+      endCubeGesture(
+        false
+      );
+
+
+      await playerSliceMove(
+
+        move.axis,
+
+        move.layer,
+
+        move.direction
+
+      );
+
+
+      controls.enabled =
+        true;
+
+    }
+
+
+
+    function onPointerUp(
+      event
+    ) {
+
+      if (
+        !cubeGesture
+      ) {
+
+        return;
+
+      }
+
+
+      if (
+        event.pointerId !==
+        cubeGesture.pointerId
+      ) {
+
+        return;
+
+      }
+
+
+      event.preventDefault();
+
+      event.stopPropagation();
+
+
+      endCubeGesture();
+
+    }
+
+
+
+    function onPointerCancel(
+      event
+    ) {
+
+      if (
+        cubeGesture &&
+        event.pointerId ===
+        cubeGesture.pointerId
+      ) {
+
+        endCubeGesture();
+
+      }
+
+    }
+
+
+
+    function endCubeGesture(
+      enableControls = true
+    ) {
+
+      if (
+        cubeGesture
+      ) {
+
+        try {
+
+          renderer
+            .domElement
+            .releasePointerCapture(
+              cubeGesture.pointerId
+            );
+
+        }
+
+        catch (
+          error
+        ) {
+          /*
+            Pointer capture 已釋放時
+            可以忽略。
+          */
+        }
+
+      }
+
+
+      cubeGesture =
+        null;
+
+
+      if (
+        enableControls
+      ) {
+
+        controls.enabled =
+          true;
+
+      }
+
+    }
+
+
+
+    /*
+      capture = true 很重要。
+
+      先判斷是否點到魔方，
+      再決定要不要讓 OrbitControls
+      接手。
+    */
+
+    renderer.domElement.addEventListener(
+      "pointerdown",
+      onPointerDown,
+      true
+    );
+
+
+    renderer.domElement.addEventListener(
+      "pointermove",
+      onPointerMove,
+      true
+    );
+
+
+    renderer.domElement.addEventListener(
+      "pointerup",
+      onPointerUp,
+      true
+    );
+
+
+    renderer.domElement.addEventListener(
+      "pointercancel",
+      onPointerCancel,
+      true
+    );
+
+
+
+    /* ==================================================
+       標準打亂
+    ================================================== */
+
+    const scrambleMoves = [
+
+      {
+        name: "R",
+        axis: "x",
+        layer: 1,
+        direction: -1
+      },
+
+      {
+        name: "L",
+        axis: "x",
+        layer: -1,
+        direction: 1
+      },
+
+      {
+        name: "U",
+        axis: "y",
+        layer: 1,
+        direction: -1
+      },
+
+      {
+        name: "D",
+        axis: "y",
+        layer: -1,
+        direction: 1
+      },
+
+      {
+        name: "F",
+        axis: "z",
+        layer: 1,
+        direction: -1
+      },
+
+      {
+        name: "B",
+        axis: "z",
+        layer: -1,
+        direction: 1
+      }
+
+    ];
+
+
 
     function generateScramble(
       length = 25
     ) {
 
-      const faces = [
-        "U",
-        "D",
-        "L",
-        "R",
-        "F",
-        "B"
-      ];
-
-
       const result = [];
 
 
-      let previousFace =
+      let previousName =
         null;
 
 
@@ -2775,29 +3136,30 @@
         i++
       ) {
 
-        let face;
+        let move;
 
 
         do {
 
-          face =
-            faces[
+          move =
+            scrambleMoves[
               Math.floor(
-                Math.random() *
-                faces.length
+                Math.random()
+                *
+                scrambleMoves.length
               )
             ];
 
         }
 
         while (
-          face ===
-          previousFace
+          move.name ===
+          previousName
         );
 
 
-        previousFace =
-          face;
+        previousName =
+          move.name;
 
 
         const prime =
@@ -2806,8 +3168,30 @@
 
 
         result.push({
-          face,
+
+          name:
+            move.name,
+
+          axis:
+            move.axis,
+
+          layer:
+            move.layer,
+
+          direction:
+
+            prime
+
+              ?
+
+              -move.direction
+
+              :
+
+              move.direction,
+
           prime
+
         });
 
       }
@@ -2838,14 +3222,13 @@
         true;
 
 
-      setButtonsDisabled(
-        true
-      );
+      scrambleButton.disabled =
+        true;
 
 
-      /*
-        先恢復完整狀態。
-      */
+      resetButton.disabled =
+        true;
+
 
       createCube3D();
 
@@ -2859,25 +3242,31 @@
         );
 
 
-      /*
-        不播動畫，
-        所以幾乎立即完成。
-      */
-
       for (
         const move of scramble
       ) {
 
-        applyStickerMove(
-          move.face,
-          move.prime
+        applySliceToStickers(
+
+          move.axis,
+
+          move.layer,
+
+          move.direction
+
         );
 
 
         await rotateLayer3D(
-          move.face,
-          move.prime,
+
+          move.axis,
+
+          move.layer,
+
+          move.direction,
+
           false
+
         );
 
       }
@@ -2892,11 +3281,11 @@
 
                 ?
 
-                `${move.face}′`
+                `${move.name}′`
 
                 :
 
-                move.face
+                move.name
           )
           .join(
             " "
@@ -2929,16 +3318,19 @@
         false;
 
 
-      setButtonsDisabled(
-        false
-      );
+      scrambleButton.disabled =
+        false;
+
+
+      resetButton.disabled =
+        false;
 
     }
 
 
 
     /* ==================================================
-       重置方塊
+       重置
     ================================================== */
 
     function resetCube() {
@@ -3014,36 +3406,8 @@
 
 
     /* ==================================================
-       按鈕事件
+       按鈕
     ================================================== */
-
-    moveButtons.forEach(
-      button => {
-
-        button.addEventListener(
-          "click",
-          () => {
-
-            const face =
-              button.dataset.move;
-
-
-            const prime =
-              button.dataset.prime ===
-              "true";
-
-
-            playerMove(
-              face,
-              prime
-            );
-
-          }
-        );
-
-      }
-    );
-
 
     scrambleButton.addEventListener(
       "click",
@@ -3065,7 +3429,7 @@
 
 
     /* ==================================================
-       調整畫布尺寸
+       Resize
     ================================================== */
 
     function resizeRenderer() {
@@ -3103,7 +3467,7 @@
 
 
     /* ==================================================
-       Render Loop
+       Render
     ================================================== */
 
     function render() {
@@ -3142,7 +3506,7 @@
 
 
     /*
-      一進入遊戲就直接打亂。
+      進入遊戲後直接產生亂序。
     */
 
     scrambleCube();
