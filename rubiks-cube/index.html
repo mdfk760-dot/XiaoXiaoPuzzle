@@ -711,9 +711,9 @@
 
 
     import {
-      OrbitControls
+      TrackballControls
     }
-    from "three/addons/controls/OrbitControls.js";
+    from "three/addons/controls/TrackballControls.js";
 
 
 
@@ -830,30 +830,44 @@
 
 
     const controls =
-      new OrbitControls(
+      new TrackballControls(
         camera,
         renderer.domElement
       );
 
 
-    controls.enableDamping =
+    /*
+      TrackballControls 不會固定世界座標的「上方」，
+      因此整顆魔方可以真正自由翻滾：
+      白色面可以朝前、朝下、朝左或任何方向。
+    */
+
+    controls.rotateSpeed =
+      3.0;
+
+
+    controls.zoomSpeed =
+      1.2;
+
+
+    controls.noPan =
       true;
 
 
-    controls.dampingFactor =
-      0.08;
-
-
-    controls.enablePan =
+    controls.noRotate =
       false;
 
 
-    /*
-      不設定 minPolarAngle /
-      maxPolarAngle。
+    controls.noZoom =
+      false;
 
-      因此視角可以自由上下翻轉。
-    */
+
+    controls.staticMoving =
+      false;
+
+
+    controls.dynamicDampingFactor =
+      0.12;
 
 
     controls.minDistance =
@@ -2520,7 +2534,7 @@
         沒有點到魔方。
 
         不攔截事件，
-        交給 OrbitControls，
+        交給 TrackballControls，
         因此會旋轉觀看視角。
       */
 
@@ -3034,7 +3048,7 @@
       capture = true 很重要。
 
       先判斷是否點到魔方，
-      再決定要不要讓 OrbitControls
+      再決定要不要讓 TrackballControls
       接手。
     */
 
@@ -3392,6 +3406,13 @@
       );
 
 
+      camera.up.set(
+        0,
+        1,
+        0
+      );
+
+
       controls.target.set(
         0,
         0,
@@ -3455,6 +3476,16 @@
 
 
       camera.updateProjectionMatrix();
+
+
+      if (
+        typeof controls.handleResize ===
+        "function"
+      ) {
+
+        controls.handleResize();
+
+      }
 
     }
 
