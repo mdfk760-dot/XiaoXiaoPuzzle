@@ -2578,6 +2578,7 @@
 
     let currentHint = null;
     let demoApplied = false;
+    let demoFrameFace = null;
 
 
     function hideHintPanel() {
@@ -2600,9 +2601,9 @@
         !hintEnabled ||
         isAnimating;
 
-      if (!hintEnabled) {
+      if (!hintEnabled && !demoApplied) {
         currentHint = null;
-        demoApplied = false;
+        demoFrameFace = null;
         restoreFormulaButton.disabled = true;
         hideHintPanel();
       }
@@ -2830,7 +2831,17 @@
       restoring = false
     ) {
       if (isAnimating) return;
-      if (!currentProgress.lastLayerFace) return;
+
+      const frameFace =
+        restoring
+          ? demoFrameFace
+          : currentProgress.lastLayerFace;
+
+      if (!frameFace) return;
+
+      if (!restoring) {
+        demoFrameFace = frameFace;
+      }
 
       isAnimating = true;
       controls.enabled = false;
@@ -2840,9 +2851,6 @@
       restoreFormulaButton.disabled = true;
       scrambleButton.disabled = true;
       resetButton.disabled = true;
-
-      const frameFace =
-        currentProgress.lastLayerFace;
 
       const moves =
         parseFormula(formula);
@@ -2874,15 +2882,17 @@
       scrambleButton.disabled = false;
       resetButton.disabled = false;
 
-      updateProgressUI();
-
       if (restoring) {
         demoApplied = false;
-        restoreFormulaButton.disabled = true;
+        demoFrameFace = null;
       } else {
         demoApplied = true;
-        restoreFormulaButton.disabled = false;
       }
+
+      updateProgressUI();
+
+      restoreFormulaButton.disabled =
+        !demoApplied;
 
       demoFormulaButton.disabled = false;
       hintToggleButton.disabled =
@@ -4291,6 +4301,9 @@
       demoApplied =
         false;
 
+      demoFrameFace =
+        null;
+
       restoreFormulaButton.disabled =
         true;
 
@@ -4419,6 +4432,9 @@
 
       demoApplied =
         false;
+
+      demoFrameFace =
+        null;
 
       restoreFormulaButton.disabled =
         true;
