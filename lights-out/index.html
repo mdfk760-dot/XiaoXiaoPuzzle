@@ -1076,6 +1076,86 @@
 
     let gameFinished = false;
 
+    const SAVE_KEY = "xiaoxiao-lights-out-save-v1";
+
+    function clearSave() {
+      localStorage.removeItem(SAVE_KEY);
+    }
+
+    function saveGame() {
+      if (gameFinished) {
+        clearSave();
+        return;
+      }
+
+      const data = {
+        version: 1,
+        difficulty:
+          document.getElementById("difficulty").value,
+        nodes,
+        connections,
+        currentState,
+        startState,
+        targetState,
+        moveCount,
+        bestSolution
+      };
+
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+      } catch (_) {}
+    }
+
+    function restoreGame() {
+      try {
+        const raw = localStorage.getItem(SAVE_KEY);
+        if (!raw) return false;
+
+        const data = JSON.parse(raw);
+
+        if (
+          !data ||
+          data.version !== 1 ||
+          !Array.isArray(data.nodes) ||
+          !Array.isArray(data.connections) ||
+          !Array.isArray(data.currentState) ||
+          !Array.isArray(data.targetState)
+        ) {
+          clearSave();
+          return false;
+        }
+
+        document.getElementById("difficulty").value =
+          data.difficulty || "easy";
+
+        nodes = data.nodes;
+        connections = data.connections;
+        currentState = [...data.currentState];
+        startState = [...data.startState];
+        targetState = [...data.targetState];
+        moveCount = Number(data.moveCount) || 0;
+        bestSolution =
+          Array.isArray(data.bestSolution)
+            ? [...data.bestSolution]
+            : findBestSolution(startState, targetState);
+
+        hintIndex = null;
+        gameFinished = false;
+
+        drawTarget();
+        drawGame();
+        updateInfo();
+
+        document.getElementById("message").textContent =
+          "已恢復上次遊戲進度";
+
+        return true;
+      } catch (_) {
+        clearSave();
+        return false;
+      }
+    }
+
 
 
     /* ==================================================
@@ -1884,6 +1964,13 @@
 
       checkWin();
 
+
+      if (!gameFinished) {
+
+        saveGame();
+
+      }
+
     }
 
 
@@ -1946,6 +2033,9 @@
       gameFinished = true;
 
 
+      clearSave();
+
+
       const message =
         document
           .getElementById(
@@ -1985,6 +2075,9 @@
     function restartGame() {
 
 
+      clearSave();
+
+
       currentState =
         [...startState];
 
@@ -2011,6 +2104,9 @@
 
       updateInfo();
 
+
+      saveGame();
+
     }
 
 
@@ -2021,6 +2117,9 @@
 
 
     function newGame() {
+
+
+      clearSave();
 
 
       bestSolution = [];
@@ -2044,6 +2143,9 @@
 
 
       updateInfo();
+
+
+      saveGame();
 
     }
 
@@ -2136,7 +2238,20 @@
       "easy";
 
 
-    newGame();
+    document.addEventListener(
+      "visibilitychange",
+      function () {
+        if (document.hidden) saveGame();
+      }
+    );
+
+    window.addEventListener("pagehide", saveGame);
+    window.addEventListener("beforeunload", saveGame);
+
+
+    if (!restoreGame()) {
+      newGame();
+    }
 
 
   </script>
