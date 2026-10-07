@@ -447,6 +447,101 @@
     let longPressTimer = null;
     let longPressTriggered = false;
 
+    const SAVE_KEY = "xiaoxiao-minesweeper-save-v1";
+
+    function clearSave() {
+      localStorage.removeItem(SAVE_KEY);
+    }
+
+    function saveGame() {
+      if (gameOver) {
+        clearSave();
+        return;
+      }
+
+      const elapsedMs =
+        startTime ? Math.max(0, Date.now() - startTime) : 0;
+
+      const data = {
+        version: 1,
+        difficulty: difficultySelect.value,
+        rows,
+        cols,
+        mineTotal,
+        board,
+        firstReveal,
+        flagMode,
+        flagsPlaced,
+        revealedSafe,
+        elapsedMs,
+        wasRunning: Boolean(startTime)
+      };
+
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+      } catch (_) {}
+    }
+
+    function restoreGame() {
+      try {
+        const raw = localStorage.getItem(SAVE_KEY);
+        if (!raw) return false;
+
+        const data = JSON.parse(raw);
+
+        if (
+          !data ||
+          data.version !== 1 ||
+          !Array.isArray(data.board) ||
+          !DIFFICULTIES[data.difficulty]
+        ) {
+          clearSave();
+          return false;
+        }
+
+        difficultySelect.value = data.difficulty;
+        rows = data.rows;
+        cols = data.cols;
+        mineTotal = data.mineTotal;
+        board = data.board;
+        firstReveal = Boolean(data.firstReveal);
+        flagMode = Boolean(data.flagMode);
+        flagsPlaced = Number(data.flagsPlaced) || 0;
+        revealedSafe = Number(data.revealedSafe) || 0;
+        gameOver = false;
+
+        overlay.classList.remove("show");
+        statusTextElement.textContent =
+          firstReveal ? "準備" : "遊戲中";
+
+        renderBoard();
+        updateInfo();
+
+        stopTimer();
+        startTime = null;
+
+        if (data.wasRunning && !firstReveal) {
+          startTime =
+            Date.now() - (Number(data.elapsedMs) || 0);
+
+          timerInterval =
+            setInterval(updateTimer, 250);
+
+          updateTimer();
+        } else {
+          timerElement.textContent = "00:00";
+        }
+
+        statusMessageElement.textContent =
+          "已恢復上次遊戲進度";
+
+        return true;
+      } catch (_) {
+        clearSave();
+        return false;
+      }
+    }
+
     function getDifficulty() {
       return DIFFICULTIES[difficultySelect.value] || DIFFICULTIES.easy;
     }
@@ -469,6 +564,8 @@
     }
 
     function newGame() {
+      clearSave();
+
       const setting = getDifficulty();
 
       rows = setting.rows;
@@ -709,6 +806,10 @@
 
       floodReveal(row, col);
       checkWin();
+
+      if (!gameOver) {
+        saveGame();
+      }
     }
 
     function floodReveal(startRow, startCol) {
@@ -764,6 +865,10 @@
       }
 
       checkWin();
+
+      if (!gameOver) {
+        saveGame();
+      }
     }
 
     function toggleFlag(row, col) {
@@ -778,6 +883,7 @@
 
       updateCellElement(row, col);
       updateInfo();
+      saveGame();
     }
 
     function updateInfo() {
@@ -865,6 +971,7 @@
         `完成時間：${getElapsedText()}。共找到 ${mineTotal} 顆地雷。`;
 
       overlay.classList.add("show");
+      clearSave();
     }
 
     function loseGame() {
@@ -891,6 +998,8 @@
       overlayText.textContent =
         `本局時間：${getElapsedText()}。`;
 
+      clearSave();
+
       setTimeout(() => {
         overlay.classList.add("show");
       }, 300);
@@ -901,12 +1010,22 @@
     flagModeButton.addEventListener("click", () => {
       flagMode = !flagMode;
       updateInfo();
+      saveGame();
     });
 
     newGameButton.addEventListener("click", newGame);
     overlayRestartButton.addEventListener("click", newGame);
 
-    newGame();
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) saveGame();
+    });
+
+    window.addEventListener("pagehide", saveGame);
+    window.addEventListener("beforeunload", saveGame);
+
+    if (!restoreGame()) {
+      newGame();
+    }
   </script>
 </body>
 </html>
