@@ -479,6 +479,73 @@
     let newTileIndex = -1;
 
     const BEST_SCORE_KEY = "xiaoxiao-2048-best-score";
+    const SAVE_KEY = "xiaoxiao-2048-save-v1";
+
+    function clearSave() {
+      localStorage.removeItem(SAVE_KEY);
+    }
+
+    function saveGame() {
+      if (gameOver) {
+        clearSave();
+        return;
+      }
+
+      const data = {
+        version: 1,
+        board,
+        score,
+        hasWon,
+        keepPlaying
+      };
+
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+      } catch (_) {}
+    }
+
+    function restoreGame() {
+      try {
+        const raw = localStorage.getItem(SAVE_KEY);
+        if (!raw) return false;
+
+        const data = JSON.parse(raw);
+
+        if (
+          !data ||
+          data.version !== 1 ||
+          !Array.isArray(data.board) ||
+          data.board.length !== SIZE ||
+          !data.board.every(row =>
+            Array.isArray(row) &&
+            row.length === SIZE
+          )
+        ) {
+          clearSave();
+          return false;
+        }
+
+        board = data.board.map(row => [...row]);
+        score = Number(data.score) || 0;
+        hasWon = Boolean(data.hasWon);
+        keepPlaying =
+          Boolean(data.keepPlaying) || hasWon;
+        gameOver = false;
+        mergedIndexes.clear();
+        hideOverlay();
+        statusElement.textContent =
+          "已恢復上次遊戲進度";
+
+        updateBestScore();
+        render();
+        boardElement.focus({ preventScroll: true });
+
+        return true;
+      } catch (_) {
+        clearSave();
+        return false;
+      }
+    }
 
     function getBestScore() {
       const value = Number(localStorage.getItem(BEST_SCORE_KEY));
@@ -494,6 +561,8 @@
     }
 
     function newGame() {
+      clearSave();
+
       board = createEmptyBoard();
       score = 0;
       hasWon = false;
@@ -664,6 +733,10 @@
       updateBestScore();
       render();
       checkGameState();
+
+      if (!gameOver) {
+        saveGame();
+      }
     }
 
     function updateBestScore() {
@@ -723,6 +796,7 @@
 
       if (!canMove()) {
         gameOver = true;
+        clearSave();
         showOverlay(
           "遊戲結束",
           `本局分數：${score}，最大方塊：${maxTile}。`,
@@ -791,6 +865,7 @@
       keepPlaying = true;
       hideOverlay();
       statusElement.textContent = "繼續挑戰！";
+      saveGame();
       boardElement.focus({ preventScroll: true });
     }
 
@@ -872,8 +947,18 @@
       }
     });
 
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) saveGame();
+    });
+
+    window.addEventListener("pagehide", saveGame);
+    window.addEventListener("beforeunload", saveGame);
+
     bestScoreElement.textContent = getBestScore();
-    newGame();
+
+    if (!restoreGame()) {
+      newGame();
+    }
   </script>
 
 </body>
