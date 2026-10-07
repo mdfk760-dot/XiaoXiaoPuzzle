@@ -648,6 +648,147 @@
     let gameStarted = false;
     let gameCompleted = false;
 
+    const SAVE_KEY = "xiaoxiao-memory-match-save-v1";
+
+    function clearSave() {
+      localStorage.removeItem(SAVE_KEY);
+    }
+
+    function saveGame() {
+      if (gameCompleted) {
+        clearSave();
+        return;
+      }
+
+      const elapsedMs =
+        startTime ? Math.max(0, Date.now() - startTime) : 0;
+
+      const cardState = cards.map(card => ({
+        pairId: card.pairId,
+        type: card.type,
+        uniqueId: card.uniqueId,
+        matched: Boolean(card.matched)
+      }));
+
+      const data = {
+        version: 1,
+        difficulty: difficultySelect.value,
+        mode,
+        customImages,
+        cards: cardState,
+        moveCount,
+        matchedPairs,
+        totalPairs,
+        elapsedMs,
+        wasRunning: gameStarted
+      };
+
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+      } catch (_) {
+        messageElement.textContent =
+          "自訂圖片較大，這一局可能無法自動存檔。";
+      }
+    }
+
+    function restoreGame() {
+      try {
+        const raw = localStorage.getItem(SAVE_KEY);
+        if (!raw) return false;
+
+        const data = JSON.parse(raw);
+
+        if (
+          !data ||
+          data.version !== 1 ||
+          !Array.isArray(data.cards) ||
+          !DIFFICULTIES[data.difficulty]
+        ) {
+          clearSave();
+          return false;
+        }
+
+        difficultySelect.value = data.difficulty;
+        mode = data.mode === "custom" ? "custom" : "emoji";
+        customImages =
+          Array.isArray(data.customImages)
+            ? data.customImages
+            : [];
+
+        if (mode === "custom" && customImages.length < 2) {
+          clearSave();
+          return false;
+        }
+
+        cards = data.cards.map(card => {
+          let value = "";
+
+          if (card.type === "image") {
+            const index =
+              Number(String(card.pairId).replace("image-", ""));
+            value = customImages[index] || "";
+          } else {
+            const index =
+              Number(String(card.pairId).replace("emoji-", ""));
+            value = DEFAULT_EMOJIS[index] || "❓";
+          }
+
+          return {
+            ...card,
+            value,
+            matched: Boolean(card.matched)
+          };
+        });
+
+        moveCount = Number(data.moveCount) || 0;
+        matchedPairs = Number(data.matchedPairs) || 0;
+        totalPairs = Number(data.totalPairs) || 0;
+        gameCompleted = false;
+        firstCard = null;
+        secondCard = null;
+        boardLocked = false;
+
+        difficultySelect.disabled = mode === "custom";
+
+        updateImagePanel();
+        hideOverlay();
+        renderBoard();
+
+        cards.forEach((cardData, index) => {
+          if (cardData.matched) {
+            const element = boardElement.children[index];
+            if (element) element.classList.add("matched");
+          }
+        });
+
+        updateInfo();
+
+        stopTimer();
+        startTime = null;
+        gameStarted = Boolean(data.wasRunning);
+
+        if (gameStarted) {
+          startTime =
+            Date.now() - (Number(data.elapsedMs) || 0);
+
+          timerInterval =
+            setInterval(updateTimer, 250);
+
+          updateTimer();
+        } else {
+          timerElement.textContent = "00:00";
+        }
+
+        messageElement.textContent =
+          "已恢復上次遊戲進度";
+
+        return true;
+      } catch (_) {
+        clearSave();
+        return false;
+      }
+    }
+
     function shuffle(array) {
       const copy = [...array];
 
@@ -704,14 +845,16 @@
           pairId: source.id,
           type: source.type,
           value: source.value,
-          uniqueId: `${source.id}-a`
+          uniqueId: `${source.id}-a`,
+          matched: false
         });
 
         deck.push({
           pairId: source.id,
           type: source.type,
           value: source.value,
-          uniqueId: `${source.id}-b`
+          uniqueId: `${source.id}-b`,
+          matched: false
         });
       });
 
@@ -765,6 +908,10 @@
         inner.appendChild(front);
         card.appendChild(inner);
 
+        if (cardData.matched) {
+          card.classList.add("matched");
+        }
+
         card.addEventListener("click", () => {
           handleCardClick(card, cardData);
         });
@@ -802,6 +949,9 @@
         firstCard.element.classList.add("matched");
         secondCard.element.classList.add("matched");
 
+        firstCard.data.matched = true;
+        secondCard.data.matched = true;
+
         matchedPairs++;
         updateInfo();
 
@@ -810,6 +960,8 @@
 
         if (matchedPairs >= totalPairs) {
           finishGame();
+        } else {
+          saveGame();
         }
 
         return;
@@ -827,6 +979,7 @@
         firstCard = null;
         secondCard = null;
         boardLocked = false;
+        saveGame();
       }, 780);
     }
 
@@ -907,6 +1060,8 @@
 
       messageElement.textContent =
         "全部配對完成！";
+
+      clearSave();
     }
 
     function hideOverlay() {
@@ -914,6 +1069,8 @@
     }
 
     function newGame() {
+      clearSave();
+
       if (mode === "custom" && customImages.length < 2) {
         messageElement.textContent =
           "自訂圖片模式至少需要 2 張不同圖片。";
@@ -937,6 +1094,7 @@
       updateInfo();
 
       messageElement.textContent = "";
+      saveGame();
     }
 
     function switchToEmojiMode() {
@@ -979,12 +1137,37 @@
         const reader = new FileReader();
 
         reader.onload = () => {
-          resolve(reader.result);
+          const img = new Image();
+
+          img.onload = () => {
+            const side = Math.min(img.naturalWidth, img.naturalHeight);
+            const sx = (img.naturalWidth - side) / 2;
+            const sy = (img.naturalHeight - side) / 2;
+
+            const canvas = document.createElement("canvas");
+            canvas.width = 512;
+            canvas.height = 512;
+
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(
+              img,
+              sx, sy, side, side,
+              0, 0, 512, 512
+            );
+
+            resolve(
+              canvas.toDataURL("image/jpeg", 0.82)
+            );
+          };
+
+          img.onerror = () =>
+            reject(new Error("圖片讀取失敗"));
+
+          img.src = reader.result;
         };
 
-        reader.onerror = () => {
+        reader.onerror = () =>
           reject(new Error("圖片讀取失敗"));
-        };
 
         reader.readAsDataURL(file);
       });
@@ -1077,8 +1260,17 @@
       clearCustomImages
     );
 
-    updateImagePanel();
-    newGame();
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) saveGame();
+    });
+
+    window.addEventListener("pagehide", saveGame);
+    window.addEventListener("beforeunload", saveGame);
+
+    if (!restoreGame()) {
+      updateImagePanel();
+      newGame();
+    }
   </script>
 
 </body>
